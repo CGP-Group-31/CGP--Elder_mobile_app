@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
+import 'login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -15,9 +16,6 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Spacer(flex: 2),
 
-              /// 1. BLACK AND WHITE ICON (Wireframe Style)
-              /// I created a CustomPainter to draw the exact wireframe icon.
-              /// If you get your own PNG, just replace 'CustomPaint' with 'Image.asset'
               Center(
                 child: CustomPaint(
                   size: const Size(180, 150),
@@ -27,7 +25,6 @@ class WelcomeScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              /// 2. WELCOME TEXT
               const Text(
                 "Welcome to\nElder Care",
                 textAlign: TextAlign.center,
@@ -41,7 +38,6 @@ class WelcomeScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              /// 3. SUBTITLE
               const Text(
                 "Simplifying your daily tasks\nand staying connected",
                 textAlign: TextAlign.center,
@@ -54,7 +50,6 @@ class WelcomeScreen extends StatelessWidget {
 
               const Spacer(flex: 3),
 
-              /// 4. CREATE ACCOUNT BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -77,12 +72,18 @@ class WelcomeScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              /// 5. LOGIN BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LoginScreen(),
+                      ),
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary, width: 2),
                     shape: RoundedRectangleBorder(
@@ -102,7 +103,6 @@ class WelcomeScreen extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              /// 6. FOOTER LINKS
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -135,12 +135,11 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-/// Custom Painter to draw the "Two People in Heart" icon from the wireframe
 class ElderHeartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF6F7F7D) // Using your theme's gray for the B&W look
+      ..color = const Color(0xFF6F7F7D)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
 
@@ -148,7 +147,6 @@ class ElderHeartPainter extends CustomPainter {
       ..color = const Color(0xFF6F7F7D)
       ..style = PaintingStyle.fill;
 
-    // Draw Heart Outline
     final path = Path();
     path.moveTo(size.width / 2, size.height * 0.3);
     path.cubicTo(size.width * 0.2, 0, 0, size.height * 0.5, size.width / 2, size.height);
@@ -156,11 +154,9 @@ class ElderHeartPainter extends CustomPainter {
     path.cubicTo(size.width * 0.8, 0, size.width, size.height * 0.5, size.width / 2, size.height);
     canvas.drawPath(path, paint);
 
-    // Draw Two People (Simplified Circles and Shoulders)
-    canvas.drawCircle(Offset(size.width * 0.42, size.height * 0.5), 10, fillPaint); // Person 1 Head
-    canvas.drawCircle(Offset(size.width * 0.58, size.height * 0.45), 12, fillPaint); // Person 2 Head
+    canvas.drawCircle(Offset(size.width * 0.42, size.height * 0.5), 10, fillPaint);
+    canvas.drawCircle(Offset(size.width * 0.58, size.height * 0.45), 12, fillPaint);
 
-    // Shoulders
     canvas.drawRRect(
       RRect.fromLTRBR(size.width * 0.35, size.height * 0.62, size.width * 0.5, size.height * 0.8, const Radius.circular(10)),
       fillPaint,
