@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'theme.dart';
+import '../theme.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../../core/session/elder_session_manager.dart';
+import './elder_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,8 +12,54 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
   bool obscure = true;
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email and password are required")),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      await ElderAuthService.loginElder(email: email, password: password);
+
+      // double-check session (optional)
+      final ok = await ElderSessionManager.isLoggedIn();
+      if (!ok) throw Exception("Session not saved. Try again.");
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst("Exception: ", ""))),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +70,14 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(30),
           child: Column(
             children: [
-
               const SizedBox(height: 60),
 
               TextField(
+                controller: _emailController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.containerBackground,
-                  hintText: "Phone or Email",
+                  hintText: "Email",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -39,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
 
               TextField(
+                controller: _passwordController,
                 obscureText: obscure,
                 decoration: InputDecoration(
                   filled: true,
@@ -66,18 +115,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const DashboardScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: _loading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                   ),
-                  child: const Text("Login"),
+                  child: Text(_loading ? "Logging in..." : "Login"),
                 ),
               ),
             ],
