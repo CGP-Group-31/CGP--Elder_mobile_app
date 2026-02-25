@@ -1,7 +1,10 @@
-
 import 'package:flutter/material.dart';
-import 'theme.dart';
+import '../theme.dart';
 import '../auth/welcome_screen.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../../core/session/elder_session_manager.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import '../../core/notifications/elder_fcm_manager.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,13 +18,14 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
-  // Updated HEX to match the logo background from the screenshot
   static const Color logoBgColor = Color(0xFFE9F5F3);
 
   @override
   void initState() {
     super.initState();
-
+    FirebaseMessaging.onMessage.listen((message) {
+      print("FCM Foreground: ${message.notification?.title} | ${message.notification?.body}");
+    });
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -33,20 +37,24 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
-    _navigate();
+
+    // ✅ SAFE NAVIGATION FIX
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigate();
+    });
   }
 
   Future<void> _navigate() async {
-    // Show splash for 3 seconds
     await Future.delayed(const Duration(seconds: 3));
-
     if (!mounted) return;
 
-    // Transition to Welcome Screen
+    final isLoggedIn = await ElderSessionManager.isLoggedIn();
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const WelcomeScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+        isLoggedIn ? const DashboardScreen() : const WelcomeScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -64,11 +72,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Applies the color to the entire phone screen
       backgroundColor: logoBgColor,
       body: Stack(
         children: [
-          // Centered Logo blending into the background
           Center(
             child: FadeTransition(
               opacity: _fadeAnimation,
@@ -79,8 +85,6 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
           ),
-
-          // Minimal Loading Indicator
           Positioned(
             bottom: 80,
             left: 0,
