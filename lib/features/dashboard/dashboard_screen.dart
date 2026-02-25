@@ -3,10 +3,11 @@ import '../theme.dart';
 import '../navigation/elder_bottom_nav.dart';
 
 // Feature pages (create below)
-import '../talk/talk_screen.dart';
+
 import '../reminders/reminders_screen.dart';
 import '../location/location_screen.dart';
-import '../messages/messages_screen.dart';
+import '../ai_companion/talk_to_companion_screen.dart';
+import '../messaging/messaging_screen.dart';
 import '../profile/profile_screen.dart';
 import '../sos/sos_screen.dart';
 
@@ -103,7 +104,7 @@ class DashboardScreen extends StatelessWidget {
                           icon: Icons.mic_rounded,
                           bg: AppColors.primary,
                           fg: Colors.white,
-                          onTap: () => _open(context, const TalkCompanionScreen()),
+                         onTap: () => _open(context, const TalkToCompanionScreen()),
                         ),
                         _HomeTile(
                           title: "Reminders",
@@ -124,7 +125,7 @@ class DashboardScreen extends StatelessWidget {
                           icon: Icons.mail_rounded,
                           bg: AppColors.emergencyBackground, // pink
                           fg: AppColors.primaryText,
-                          onTap: () => _open(context, const MessagesScreen()),
+                         onTap: () => _open(context, const MessagingScreen()),
                         ),
                       ],
                     ),

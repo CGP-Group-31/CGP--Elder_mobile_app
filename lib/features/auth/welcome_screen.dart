@@ -50,6 +50,7 @@ class WelcomeScreen extends StatelessWidget {
 
               const Spacer(flex: 3),
 
+              // Create Account Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -65,13 +66,17 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   child: const Text(
                     "Create Account",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 16),
 
+              // Login Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -85,7 +90,10 @@ class WelcomeScreen extends StatelessWidget {
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.primary, width: 2),
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -109,7 +117,10 @@ class WelcomeScreen extends StatelessWidget {
                   _footerText("Terms of Service"),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text("|", style: TextStyle(color: AppColors.textShade)),
+                    child: Text(
+                      "|",
+                      style: TextStyle(color: AppColors.textShade),
+                    ),
                   ),
                   _footerText("Privacy Policy"),
                 ],
@@ -149,20 +160,43 @@ class ElderHeartPainter extends CustomPainter {
 
     final path = Path();
     path.moveTo(size.width / 2, size.height * 0.3);
-    path.cubicTo(size.width * 0.2, 0, 0, size.height * 0.5, size.width / 2, size.height);
+    path.cubicTo(
+        size.width * 0.2, 0, 0, size.height * 0.5,
+        size.width / 2, size.height);
     path.moveTo(size.width / 2, size.height * 0.3);
-    path.cubicTo(size.width * 0.8, 0, size.width, size.height * 0.5, size.width / 2, size.height);
+    path.cubicTo(
+        size.width * 0.8, 0, size.width, size.height * 0.5,
+        size.width / 2, size.height);
     canvas.drawPath(path, paint);
 
-    canvas.drawCircle(Offset(size.width * 0.42, size.height * 0.5), 10, fillPaint);
-    canvas.drawCircle(Offset(size.width * 0.58, size.height * 0.45), 12, fillPaint);
+    canvas.drawCircle(
+        Offset(size.width * 0.42, size.height * 0.5),
+        10,
+        fillPaint);
+    canvas.drawCircle(
+        Offset(size.width * 0.58, size.height * 0.45),
+        12,
+        fillPaint);
 
     canvas.drawRRect(
-      RRect.fromLTRBR(size.width * 0.35, size.height * 0.62, size.width * 0.5, size.height * 0.8, const Radius.circular(10)),
+      RRect.fromLTRBR(
+        size.width * 0.35,
+        size.height * 0.62,
+        size.width * 0.5,
+        size.height * 0.8,
+        const Radius.circular(10),
+      ),
       fillPaint,
     );
+
     canvas.drawRRect(
-      RRect.fromLTRBR(size.width * 0.5, size.height * 0.58, size.width * 0.65, size.height * 0.8, const Radius.circular(10)),
+      RRect.fromLTRBR(
+        size.width * 0.5,
+        size.height * 0.58,
+        size.width * 0.65,
+        size.height * 0.8,
+        const Radius.circular(10),
+      ),
       fillPaint,
     );
   }
