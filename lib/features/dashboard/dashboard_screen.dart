@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../navigation/elder_bottom_nav.dart';
 
-// Feature pages (create below)
-
+import '../talk/talk_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../location/location_screen.dart';
-import '../ai_companion/talk_to_companion_screen.dart';
-import '../messaging/messaging_screen.dart';
+import '../messages/messages_screen.dart';
+
 import '../profile/profile_screen.dart';
 import '../sos/sos_screen.dart';
 
@@ -25,13 +24,13 @@ class DashboardScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // soft decorative blobs like your wireframe background
+            // soft decorative blobs (keeps your wireframe feel)
             Positioned(
-              top: -80,
-              right: -80,
+              top: -90,
+              right: -90,
               child: Container(
-                width: 220,
-                height: 220,
+                width: 240,
+                height: 240,
                 decoration: BoxDecoration(
                   color: AppColors.sectionBackground.withValues(alpha:0.55),
                   shape: BoxShape.circle,
@@ -40,10 +39,10 @@ class DashboardScreen extends StatelessWidget {
             ),
             Positioned(
               bottom: 120,
-              left: -100,
+              left: -110,
               child: Container(
-                width: 260,
-                height: 260,
+                width: 280,
+                height: 280,
                 decoration: BoxDecoration(
                   color: AppColors.sectionBackground.withValues(alpha:0.35),
                   shape: BoxShape.circle,
@@ -61,77 +60,87 @@ class DashboardScreen extends StatelessWidget {
                     child: Text(
                       "Elderly Care",
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 22, // bigger
                         fontWeight: FontWeight.w800,
                         color: AppColors.primaryText,
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 18),
 
                   // Greeting
                   Text(
                     "Hi John!",
                     style: TextStyle(
-                      fontSize: 34,
+                      fontSize: 38, // bigger (elder friendly)
                       height: 1.1,
                       fontWeight: FontWeight.w900,
                       color: AppColors.primaryText,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     "How are you today?",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20, // bigger
                       fontWeight: FontWeight.w600,
                       color: AppColors.descriptionText,
                     ),
                   ),
 
-                  const SizedBox(height: 22),
+                  // Push the grid to be visually centered
+                  const Spacer(),
 
-                  // 2x2 tiles
-                  Expanded(
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 18,
-                      mainAxisSpacing: 18,
-                      childAspectRatio: 1.05,
+                  // Grid centered + more spacing + taller tiles
+                  Align(
+                    alignment: Alignment.center,
+                    child: GridView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 24, // more spread out
+                        mainAxisSpacing: 24, // more spread out
+                        childAspectRatio: 1.05, // slightly taller rectangles
+                      ),
                       children: [
                         _HomeTile(
                           title: "Talk to\nCompanion",
                           icon: Icons.mic_rounded,
                           bg: AppColors.primary,
                           fg: Colors.white,
-                         onTap: () => _open(context, const TalkToCompanionScreen()),
+                          onTap: () =>
+                              _open(context, const TalkCompanionScreen()),
                         ),
                         _HomeTile(
                           title: "Reminders",
                           icon: Icons.calendar_month_rounded,
-                          bg: AppColors.alertNonCritical, // gold-ish
+                          bg: AppColors.alertNonCritical,
                           fg: AppColors.primaryText,
                           onTap: () => _open(context, const RemindersScreen()),
                         ),
                         _HomeTile(
                           title: "Location",
                           icon: Icons.location_on_rounded,
-                          bg: AppColors.sectionBackground, // mint
+                          bg: AppColors.sectionBackground,
                           fg: AppColors.primaryText,
                           onTap: () => _open(context, const LocationScreen()),
                         ),
                         _HomeTile(
                           title: "Messages",
                           icon: Icons.mail_rounded,
-                          bg: AppColors.emergencyBackground, // pink
+                          bg: AppColors.emergencyBackground,
                           fg: AppColors.primaryText,
-                         onTap: () => _open(context, const MessagingScreen()),
+                          onTap: () => _open(context, const MessagesScreen()),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const Spacer(), // keeps grid vertically centered between header & navbar
+                  const SizedBox(height: 6),
                 ],
               ),
             ),
@@ -142,9 +151,7 @@ class DashboardScreen extends StatelessWidget {
       // Bottom nav
       bottomNavigationBar: ElderBottomNav(
         activeTab: ElderTab.home,
-        onHome: () {
-          // already here - do nothing
-        },
+        onHome: () {},
         onSos: () {
           Navigator.pushReplacement(
             context,
@@ -180,12 +187,12 @@ class _HomeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha:0.08),
@@ -198,25 +205,32 @@ class _HomeTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Bigger icon container
             Container(
-              width: 58,
-              height: 58,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha:0.75),
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.white.withValues(alpha:0.78),
+                borderRadius: BorderRadius.circular(18),
               ),
               alignment: Alignment.center,
-              child: Icon(icon, size: 32, color: AppColors.primaryText),
+              child: Icon(
+                icon,
+                size: 34,
+                color: AppColors.primaryText,
+              ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
+
+            // Bigger tile label (elder friendly)
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: fg,
-                fontSize: 16,
+                fontSize: 18, // bigger
                 height: 1.2,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ],

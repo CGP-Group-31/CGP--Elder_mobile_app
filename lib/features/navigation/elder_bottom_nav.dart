@@ -21,27 +21,30 @@ class ElderBottomNav extends StatelessWidget {
       active ? AppColors.primary : AppColors.textShade;
 
   TextStyle _labelStyle(bool active) => TextStyle(
-    fontSize: 12,
-    fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+    fontSize: 14, // ✅ bigger label
+    fontWeight: active ? FontWeight.w900 : FontWeight.w700,
     color: active ? AppColors.primary : AppColors.textShade,
   );
 
   @override
   Widget build(BuildContext context) {
+    final bool homeActive = activeTab == ElderTab.home;
+    final bool profileActive = activeTab == ElderTab.profile;
+
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
         decoration: BoxDecoration(
           color: AppColors.background,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha:0.08),
               blurRadius: 18,
               offset: const Offset(0, -6),
             ),
           ],
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -49,26 +52,26 @@ class ElderBottomNav extends StatelessWidget {
             _NavItem(
               icon: Icons.home_rounded,
               label: "Home",
-              active: activeTab == ElderTab.home,
-              iconColor: _iconColor(activeTab == ElderTab.home),
-              labelStyle: _labelStyle(activeTab == ElderTab.home),
+              active: homeActive,
+              iconColor: _iconColor(homeActive),
+              labelStyle: _labelStyle(homeActive),
               onTap: onHome,
             ),
 
-            // SOS (center big button)
+            // ✅ SOS: larger center button
             GestureDetector(
               onTap: onSos,
               child: Container(
-                width: 64,
-                height: 64,
+                width: 72, // ✅ bigger
+                height: 72, // ✅ bigger
                 decoration: BoxDecoration(
                   color: AppColors.sosButton,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.sosButton.withValues(alpha:0.35),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
@@ -77,6 +80,7 @@ class ElderBottomNav extends StatelessWidget {
                   "SOS",
                   style: TextStyle(
                     color: Colors.white,
+                    fontSize: 16, // ✅ bigger SOS text
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
                   ),
@@ -87,9 +91,9 @@ class ElderBottomNav extends StatelessWidget {
             _NavItem(
               icon: Icons.person_rounded,
               label: "Profile",
-              active: activeTab == ElderTab.profile,
-              iconColor: _iconColor(activeTab == ElderTab.profile),
-              labelStyle: _labelStyle(activeTab == ElderTab.profile),
+              active: profileActive,
+              iconColor: _iconColor(profileActive),
+              labelStyle: _labelStyle(profileActive),
               onTap: onProfile,
             ),
           ],
@@ -122,12 +126,16 @@ class _NavItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
       child: SizedBox(
-        width: 84,
+        width: 92, // ✅ slightly wider to fit bigger text
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: iconColor, size: 28),
-            const SizedBox(height: 4),
+            Icon(
+              icon,
+              color: iconColor,
+              size: 32, // ✅ bigger icon
+            ),
+            const SizedBox(height: 6),
             Text(label, style: labelStyle),
           ],
         ),

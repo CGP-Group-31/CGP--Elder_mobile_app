@@ -7,47 +7,59 @@ import '../profile/profile_screen.dart';
 class SosScreen extends StatelessWidget {
   const SosScreen({super.key});
 
+  void _goHome(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.mainBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.sosButton,
-        foregroundColor: Colors.white,
-        title: const Text("SOS"),
-      ),
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: AppColors.emergencyBackground,
-            borderRadius: BorderRadius.circular(16),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        _goHome(context);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.mainBackground,
+        appBar: AppBar(
+          backgroundColor: AppColors.sosButton,
+          foregroundColor: Colors.white,
+          title: const Text("SOS"),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => _goHome(context),
           ),
-          child: Text(
-            "SOS page ✅",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryText,
+        ),
+        body: Center(
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppColors.emergencyBackground,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              "SOS page",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: AppColors.primaryText,
+              ),
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: ElderBottomNav(
-        activeTab: ElderTab.sos,
-        onHome: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-          );
-        },
-        onSos: () {},
-        onProfile: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          );
-        },
+        bottomNavigationBar: ElderBottomNav(
+          activeTab: ElderTab.sos,
+          onHome: () => _goHome(context),
+          onSos: () {},
+          onProfile: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            );
+          },
+        ),
       ),
     );
   }
