@@ -111,8 +111,7 @@ class DashboardScreen extends StatelessWidget {
                           icon: Icons.mic_rounded,
                           bg: AppColors.primary,
                           fg: Colors.white,
-                          onTap: () =>
-                              _open(context, const TalkCompanionScreen()),
+                          onTap: () => _open(context, TalkToCompanionScreen()),
                         ),
                         _HomeTile(
                           title: "Reminders",
@@ -133,7 +132,7 @@ class DashboardScreen extends StatelessWidget {
                           icon: Icons.mail_rounded,
                           bg: AppColors.emergencyBackground,
                           fg: AppColors.primaryText,
-                          onTap: () => _open(context, const MessagesScreen()),
+                          onTap: () => _open(context, const MessagingScreen()),
                         ),
                       ],
                     ),
