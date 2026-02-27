@@ -17,7 +17,12 @@ class ElderNotificationService {
   static const String channelName = "Medication Reminders";
   static const String channelDesc = "High priority medication reminders";
 
+  static bool _inited = false;
+
+  /// Call once at startup + inside background handler
   static Future<void> init() async {
+    if (_inited) return;
+
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidInit);
 
@@ -32,47 +37,67 @@ class ElderNotificationService {
       channelName,
       description: channelDesc,
       importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
     );
 
     await _local
         .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(androidChannel);
+
+    _inited = true;
   }
 
-  static Future<void> showMedicationAlertFromMessage(RemoteMessage message) async {
-    final data = message.data;
+  ///  Use this as fallback notification (if user misses alarm)
+  static Future<void> showFallbackNotificationFromMessage(RemoteMessage message) async {
+    await init();
 
-    final title = message.notification?.title ?? "Medicine Reminder";
-    final body = message.notification?.body ?? "";
+    final d = message.data;
 
+    if ((d["type"] ?? "") != "MED_REMINDER") return;
+
+    final scheduleId = d["scheduleId"]?.toString() ?? "";
+    final elderId = d["elderId"]?.toString() ?? "";
+    final scheduledFor = d["scheduledFor"]?.toString() ?? "";
+
+    final medicationName = d["medicationName"]?.toString() ?? "Medicine";
+    final dosage = d["dosage"]?.toString() ?? "";
+    final instructions = d["instructions"]?.toString() ?? "";
+
+    //  Human friendly notification text
+    final title = "Medicine Reminder";
+    final body = _buildBody(
+      medicationName: medicationName,
+      dosage: dosage,
+      instructions: instructions,
+    );
+
+    //  Pack everything for button tap
     final payload = jsonEncode({
-      "type": data["type"] ?? "MED_REMINDER",
-      "scheduleId": data["scheduleId"] ?? "",
-      "elderId": data["elderId"] ?? "",
-      "scheduledFor": data["scheduledFor"] ?? "",
+      "type": "MED_REMINDER",
+      "scheduleId": scheduleId,
+      "elderId": elderId,
+      "scheduledFor": scheduledFor,
     });
 
     final androidDetails = AndroidNotificationDetails(
       channelId,
       channelName,
       channelDescription: channelDesc,
-
       importance: Importance.max,
       priority: Priority.high,
 
-      // Full screen (alarm-like)
-      fullScreenIntent: true,
+      //  make it strong
       category: AndroidNotificationCategory.alarm,
       visibility: NotificationVisibility.public,
 
-      // Sound + vibration
       playSound: true,
       sound: const RawResourceAndroidNotificationSound("med_alarm"),
       enableVibration: true,
-      vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1500]),
+      vibrationPattern: Int64List.fromList([0, 700, 400, 700, 400, 900]),
 
-      // Keep until user interacts (optional)
+      // keep until user acts
       ongoing: true,
       autoCancel: false,
 
@@ -84,8 +109,8 @@ class ElderNotificationService {
           cancelNotification: true,
         ),
         const AndroidNotificationAction(
-          'SNOOZE_ACTION',
-          'SNOOZE',
+          'DISMISS_ACTION',
+          'DISMISS',
           showsUserInterface: true,
           cancelNotification: true,
         ),
@@ -94,10 +119,20 @@ class ElderNotificationService {
 
     final details = NotificationDetails(android: androidDetails);
 
-    // ✅ must be int
     final int id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
 
     await _local.show(id, title, body, details, payload: payload);
+  }
+
+  static String _buildBody({
+    required String medicationName,
+    required String dosage,
+    required String instructions,
+  }) {
+    final doseText = dosage.trim().isEmpty ? "-" : dosage.trim();
+    final insText = instructions.trim().isEmpty ? "Follow your normal instructions." : instructions.trim();
+
+    return "$medicationName\nDose: $doseText\n$insText";
   }
 
   static Future<void> _onNotificationResponse(NotificationResponse response) async {
@@ -114,6 +149,7 @@ class ElderNotificationService {
     if (payload == null) return;
 
     final decoded = jsonDecode(payload);
+
     final scheduleId = decoded["scheduleId"];
     final elderId = decoded["elderId"];
     final scheduledFor = decoded["scheduledFor"];
@@ -123,14 +159,12 @@ class ElderNotificationService {
       return;
     }
 
-    if (response.actionId == "SNOOZE_ACTION") {
-      // optional: implement snooze later
+    if (response.actionId == "DISMISS_ACTION") {
       return;
     }
-
-    // Normal tap: you can navigate in UI if needed
   }
 
+  /// no auth token in  system, so plain POST
   static Future<void> _markTaken(dynamic scheduleId, dynamic elderId, dynamic scheduledFor) async {
     try {
       final dio = DioClient.dio;
@@ -142,12 +176,10 @@ class ElderNotificationService {
           "elderId": int.parse(elderId.toString()),
           "scheduledFor": scheduledFor.toString(),
         },
-        options: Options(
-          headers: {"Content-Type": "application/json"},
-        ),
+        options: Options(headers: {"Content-Type": "application/json"}),
       );
     } catch (_) {
-      // keep silent for now
+      // silent for now
     }
   }
 }

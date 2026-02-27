@@ -7,5 +7,6 @@ data class AlarmPayload(
     val medicationName: String,
     val dosage: String,
     val instructions: String,
-    val durationSec: Int
+    val durationSec: Int,
+    val fullName: String
 )

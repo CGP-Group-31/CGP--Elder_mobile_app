@@ -14,6 +14,15 @@ class ElderAuthService {
     return androidInfo.model ?? "unknown";
   }
 
+  static String _formatOffset(Duration offset) {
+    final totalMinutes = offset.inMinutes;
+    final sign = totalMinutes >= 0 ? "+" : "-";
+    final absMinutes = totalMinutes.abs();
+    final hh = (absMinutes ~/ 60).toString().padLeft(2, "0");
+    final mm = (absMinutes % 60).toString().padLeft(2, "0");
+    return "$sign$hh:$mm"; // ex: +05:30
+  }
+
   static Exception _handleError(DioException e) {
     final responseData = e.response?.data;
     if (responseData != null && responseData["detail"] != null) {
@@ -29,8 +38,6 @@ class ElderAuthService {
     return Exception("Request failed");
   }
 
-  /// LOGIN elder
-  /// POST /api/v1/elder/elder/login
   static Future<Map<String, dynamic>> loginElder({
     required String email,
     required String password,
@@ -40,9 +47,14 @@ class ElderAuthService {
       const appType = "elder";
       final deviceModel = await _getDeviceModel();
 
-      // store meta early (useful for later sync)
+      final now = DateTime.now();
+      final tzName = now.timeZoneName; // ex: "IST" (varies)
+      final tzOffset = _formatOffset(now.timeZoneOffset); // ex: "+05:30"
+
+      // Save meta locally (optional)
       await ElderSessionManager.saveAppType(appType);
       await ElderSessionManager.saveDeviceModel(deviceModel);
+      await ElderSessionManager.saveTimezone("$tzName $tzOffset"); // store readable
 
       final response = await _dio.post(
         "/api/v1/elder/elder/login",
@@ -52,56 +64,16 @@ class ElderAuthService {
           "fcm_token": fcmToken ?? "",
           "app_type": appType,
           "device_model": deviceModel,
+          "timezone_name": tzName,
+          "timezone_offset": tzOffset,
         },
+        options: Options(headers: {"Content-Type": "application/json"}),
       );
 
       final data = Map<String, dynamic>.from(response.data);
 
-      // Expected response:
-      // {
-      //   "user_id": 0,
-      //   "role_id": 0,
-      //   "full_name": "...",
-      //   "email": "...",
-      //   "phone": "...",
-      //   "address": "...",
-      //   "date_of_birth": "YYYY-MM-DD",
-      //   "gender": "...",
-      //   "created_at": "..."
-      // }
-
-      final userId = data["user_id"];
-      final roleId = data["role_id"];
-
-      if (userId is int) {
-        await ElderSessionManager.saveElderUserId(userId);
-      } else {
-        // if backend sends string, handle it
-        final parsed = int.tryParse(userId?.toString() ?? "");
-        if (parsed != null) await ElderSessionManager.saveElderUserId(parsed);
-      }
-
-      if (roleId is int) {
-        await ElderSessionManager.saveRoleId(roleId);
-      } else {
-        final parsed = int.tryParse(roleId?.toString() ?? "");
-        if (parsed != null) await ElderSessionManager.saveRoleId(parsed);
-      }
-
-      await ElderSessionManager.saveProfile(
-        fullName: (data["full_name"] ?? "").toString(),
-        email: (data["email"] ?? "").toString(),
-        phone: (data["phone"] ?? "").toString(),
-        address: (data["address"] ?? "").toString(),
-        dateOfBirth: (data["date_of_birth"] ?? "").toString(),
-        gender: (data["gender"] ?? "").toString(),
-      );
-
-      // Optional: sync token after successful login
-      final savedToken = await ElderSessionManager.getFCMToken();
-      if (savedToken != null && savedToken.isNotEmpty) {
-        await ElderFCMManager.syncTokenToBackend(savedToken);
-      }
+      await ElderSessionManager.saveLoginResponse(data);
+      await ElderSessionManager.debugPrintAll(); // dev dump
 
       return data;
     } on DioException catch (e) {

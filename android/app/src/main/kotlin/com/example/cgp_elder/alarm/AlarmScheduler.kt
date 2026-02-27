@@ -7,6 +7,7 @@ object AlarmScheduler {
     fun scheduleNow(context: Context, payload: AlarmPayload) {
         val i = Intent(context, AlarmActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
             putExtra("scheduleId", payload.scheduleId)
             putExtra("elderId", payload.elderId)
             putExtra("scheduledFor", payload.scheduledFor)
@@ -14,6 +15,8 @@ object AlarmScheduler {
             putExtra("dosage", payload.dosage)
             putExtra("instructions", payload.instructions)
             putExtra("durationSec", payload.durationSec)
+
+            putExtra("fullName", payload.fullName)
         }
         context.startActivity(i)
     }
