@@ -7,6 +7,7 @@ import com.example.cgp_elder.alarm.AlarmPayload
 import com.example.cgp_elder.alarm.AlarmScheduler
 
 class MainActivity : FlutterActivity() {
+
     private val CHANNEL = "elder_alarm_channel"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -14,6 +15,7 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
+
                 if (call.method == "startAlarm") {
                     val args = call.arguments as Map<*, *>
 
@@ -24,11 +26,12 @@ class MainActivity : FlutterActivity() {
                         medicationName = args["medicationName"].toString(),
                         dosage = args["dosage"].toString(),
                         instructions = args["instructions"].toString(),
-                        durationSec = (args["durationSec"] as Number).toInt()
+                        durationSec = (args["durationSec"] as Number).toInt(),
+                        fullName = (args["fullName"]?.toString() ?: "")
                     )
 
                     AlarmScheduler.scheduleNow(this, payload)
-                    result.success(true)
+                    result.success(null)
                 } else {
                     result.notImplemented()
                 }

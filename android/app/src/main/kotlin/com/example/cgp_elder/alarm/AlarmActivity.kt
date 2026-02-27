@@ -17,7 +17,7 @@ class AlarmActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ Wake + show over lockscreen
+        // Wake + show over lockscreen
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         window.addFlags(
@@ -28,21 +28,50 @@ class AlarmActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_alarm)
 
-        // Read extras
         val scheduleId = intent.getIntExtra("scheduleId", 0)
         val elderId = intent.getIntExtra("elderId", 0)
         val scheduledFor = intent.getStringExtra("scheduledFor") ?: ""
+
         val medicationName = intent.getStringExtra("medicationName") ?: "Medicine"
         val dosage = intent.getStringExtra("dosage") ?: ""
         val instructions = intent.getStringExtra("instructions") ?: ""
         val durationSec = intent.getIntExtra("durationSec", 60)
 
-        // UI
-        findViewById<TextView>(R.id.txtTitle).text = medicationName
-        findViewById<TextView>(R.id.txtDosage).text = "Dosage: $dosage"
-        findViewById<TextView>(R.id.txtInstructions).text = instructions
+        val fullName = intent.getStringExtra("fullName") ?: ""
 
-        // ✅ Start sound + vibration
+        // UI elements
+        val txtTitle = findViewById<TextView>(R.id.txtTitle)
+        val txtDosage = findViewById<TextView>(R.id.txtDosage)
+        val txtInstructions = findViewById<TextView>(R.id.txtInstructions)
+
+        // Greeting (safe)
+        try {
+            val txtGreeting = findViewById<TextView>(R.id.txtGreeting)
+            val nameToShow = if (fullName.isNotBlank()) fullName else "there"
+            txtGreeting.text = "Hi $nameToShow \nTime to take your medicine"
+        } catch (_: Exception) {
+            // txtGreeting not found -> ignore
+        }
+
+        // Improved message text
+        txtTitle.text = medicationName
+
+        txtDosage.text = if (dosage.isNotBlank()) {
+            "Dose: $dosage"
+        } else {
+            "Dose: -"
+        }
+
+        txtInstructions.text = buildString {
+            if (instructions.isNotBlank()) {
+                append("Instructions: ")
+                append(instructions.trim())
+                append("\n\n")
+            }
+            append("Tap TAKEN after you take it.")
+        }
+
+        // Start sound + vibration
         startAlarmSound()
         startVibration()
 
@@ -52,9 +81,11 @@ class AlarmActivity : AppCompatActivity() {
             finish()
         }, durationSec * 1000L)
 
+        // Buttons
         findViewById<Button>(R.id.btnTaken).setOnClickListener {
-            // ✅ Later: call backend with WorkManager or PendingIntent service
-            // For now just close
+            // Send backend update (WorkManager)
+            AlarmTakenApi.enqueueTaken(applicationContext, scheduleId, elderId, scheduledFor)
+
             stopAll()
             finish()
         }
@@ -66,7 +97,6 @@ class AlarmActivity : AppCompatActivity() {
     }
 
     private fun startAlarmSound() {
-        // ✅ Put your sound in android/app/src/main/res/raw/med_alarm.mp3
         mediaPlayer = MediaPlayer.create(this, R.raw.med_alarm)
         mediaPlayer?.isLooping = true
         mediaPlayer?.start()

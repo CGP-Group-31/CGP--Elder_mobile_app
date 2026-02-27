@@ -1,57 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#000000"
-    android:padding="24dp"
-    android:gravity="center">
+    android:background="#D6EFE6"
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/txtTitle"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Medicine"
-        android:textColor="#FFFFFF"
-        android:textSize="34sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:paddingBottom="16dp"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="22dp"
+        android:gravity="center_horizontal">
 
-    <TextView
-        android:id="@+id/txtDosage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Dosage:"
-        android:textColor="#FFFFFF"
-        android:textSize="22sp"
-        android:gravity="center"
-        android:paddingBottom="10dp"/>
+        <!-- Top spacing -->
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="18dp" />
 
-    <TextView
-        android:id="@+id/txtInstructions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Instructions"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:gravity="center"
-        android:paddingBottom="30dp"/>
+        <!-- Logo -->
+        <ImageView
+            android:id="@+id/imgLogo"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:src="@drawable/elder"
+            android:contentDescription="App Logo"
+            android:layout_marginBottom="12dp" />
 
-    <Button
-        android:id="@+id/btnTaken"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="TAKEN"
-        android:textSize="20sp"
-        android:padding="14dp"/>
+        <!-- Greeting -->
+        <TextView
+            android:id="@+id/txtGreeting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hi!"
+            android:textColor="#243333"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="6dp" />
 
-    <Button
-        android:id="@+id/btnDismiss"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="DISMISS"
-        android:textSize="18sp"
-        android:padding="14dp"
-        android:layout_marginTop="12dp"/>
-</LinearLayout>
+        <!-- Big title -->
+        <TextView
+            android:id="@+id/txtTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Medicine"
+            android:textColor="#2E7D7A"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="14dp" />
+
+        <!-- Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F6F7F3"
+            android:padding="18dp"
+            android:layout_marginBottom="18dp">
+
+            <!-- Small helper text -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Please take your medicine now"
+                android:textColor="#6F7F7D"
+                android:textSize="16sp"
+                android:gravity="center"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Dosage -->
+            <TextView
+                android:id="@+id/txtDosage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dose: -"
+                android:textColor="#243333"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Instructions -->
+            <TextView
+                android:id="@+id/txtInstructions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Instructions"
+                android:textColor="#7C8B89"
+                android:textSize="18sp"
+                android:lineSpacingExtra="4dp" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#BEE8DA"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Hint -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="After taking it, tap TAKEN."
+                android:textColor="#243333"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Primary Button: TAKEN -->
+        <Button
+            android:id="@+id/btnTaken"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:text="TAKEN "
+            android:textAllCaps="false"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:backgroundTint="#2E7D7A"
+            android:textColor="#F6F7F3"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Secondary Button: Dismiss -->
+        <Button
+            android:id="@+id/btnDismiss"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:text="Dismiss"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:backgroundTint="#BEE8DA"
+            android:textColor="#243333" />
+
+        <!-- Bottom spacing -->
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="14dp" />
+
+        <!-- Safety note -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="If you need help, contact your caregiver."
+            android:textColor="#6F7F7D"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginTop="14dp" />
+
+    </LinearLayout>
+</ScrollView>

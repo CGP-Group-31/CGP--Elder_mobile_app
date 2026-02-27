@@ -40,9 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-      await ElderAuthService.loginElder(email: email, password: password);
+      final resp = await ElderAuthService.loginElder(email: email, password: password);
 
-      // double-check session (optional)
+      // Optional: show relationship info to developer (debug)
+      // ignore: avoid_print
+      print("Login OK -> relationshipid=${resp["relationshipid"]}, caregiverid=${resp["caregiverid"]}");
+
+      //  double-check session (optional)
       final ok = await ElderSessionManager.isLoggedIn();
       if (!ok) throw Exception("Session not saved. Try again.");
 
@@ -74,6 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               TextField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.containerBackground,
@@ -89,14 +95,14 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: obscure,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _loading ? null : _login(),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.containerBackground,
                   hintText: "Password",
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      obscure ? Icons.visibility : Icons.visibility_off,
-                    ),
+                    icon: Icon(obscure ? Icons.visibility : Icons.visibility_off),
                     onPressed: () {
                       setState(() {
                         obscure = !obscure;
