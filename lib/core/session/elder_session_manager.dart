@@ -27,6 +27,8 @@ class ElderSessionManager {
   static const String _kRelationshipId = "elder_relationship_id";
   static const String _kCaregiverId = "elder_caregiver_id";
 
+  static const String _kEmergencyPhone = "elder_emergency_phone";
+
   static const String _kFcmToken = "elder_fcm_token";
   static const String _kAppType = "elder_app_type";
   static const String _kDeviceModel = "elder_device_model";
@@ -41,7 +43,6 @@ class ElderSessionManager {
     final v = await _storage.read(key: _kLoggedIn);
     return v == "true";
   }
-
 
   // Save meta (app/device/timezone)
   static Future<void> saveAppType(String appType) async {
@@ -91,12 +92,23 @@ class ElderSessionManager {
     await _storage.write(key: _kGender, value: (data["gender"] ?? "").toString());
     await _storage.write(key: _kCreatedAt, value: (data["created_at"] ?? "").toString());
 
-    // optional
+    // optional relationship mapping
     if (data["relationshipid"] != null) {
       await _storage.write(key: _kRelationshipId, value: data["relationshipid"].toString());
     }
     if (data["caregiverid"] != null) {
       await _storage.write(key: _kCaregiverId, value: data["caregiverid"].toString());
+    }
+
+    //  NEW: emergency phone (can be null)
+    if (data["emergency_phone"] != null) {
+      await _storage.write(
+        key: _kEmergencyPhone,
+        value: data["emergency_phone"].toString(),
+      );
+    } else {
+      // optionally clear it if backend returned null
+      await _storage.delete(key: _kEmergencyPhone);
     }
 
     await setLoggedIn(true);
@@ -131,14 +143,19 @@ class ElderSessionManager {
     return int.tryParse(v ?? "");
   }
 
-  // Debug dump
+  static Future<String?> getEmergencyPhone() async {
+    return await _storage.read(key: _kEmergencyPhone);
+  }
 
+  // Debug dump
   static Future<void> debugPrintAll() async {
     final all = await _storage.readAll(aOptions: _androidOptions);
+    // ignore: avoid_print
     all.forEach((k, v) {
       // ignore: avoid_print
       print("$k => $v");
     });
+    // ignore: avoid_print
 
   }
 
