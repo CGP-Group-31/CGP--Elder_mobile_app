@@ -227,7 +227,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fg: Colors.white,
                           onTap: () => _open(
                             context,
-                            const TalkCompanionScreen(),
+                           const TalkToCompanionScreen(),
                           ),
                         ),
                         _HomeTile(
@@ -257,7 +257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fg: AppColors.primaryText,
                           onTap: () => _open(
                             context,
-                            const MessagesScreen(),
+                           const MessagingScreen(),
                           ),
                         ),
                       ],
