@@ -7,78 +7,80 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="22dp"
+        android:padding="24dp"
         android:gravity="center_horizontal">
 
         <!-- Top spacing -->
         <Space
             android:layout_width="1dp"
-            android:layout_height="18dp" />
+            android:layout_height="20dp" />
 
         <!-- Logo -->
         <ImageView
             android:id="@+id/imgLogo"
-            android:layout_width="92dp"
-            android:layout_height="92dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:src="@drawable/elder"
             android:contentDescription="App Logo"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="16dp" />
 
-        <!-- Greeting -->
+        <!-- Greeting - Bold and Dark -->
         <TextView
             android:id="@+id/txtGreeting"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Hi!"
-            android:textColor="#243333"
-            android:textSize="22sp"
+            android:textColor="#000000"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="4dp" />
 
-        <!-- Big title -->
+        <!-- Big title - Modern Large Style -->
         <TextView
             android:id="@+id/txtTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Medicine"
-            android:textColor="#2E7D7A"
-            android:textSize="34sp"
+            android:textColor="#000000"
+            android:textSize="38sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="14dp" />
+            android:layout_marginBottom="20dp" />
 
-        <!-- Card -->
+        <!-- Card Container -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="#F6F7F3"
-            android:padding="18dp"
-            android:layout_marginBottom="18dp">
+            android:padding="22dp"
+            android:layout_marginBottom="24dp"
+            android:elevation="2dp">
 
-            <!-- Small helper text -->
+            <!-- Helper text -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Please take your medicine now"
-                android:textColor="#6F7F7D"
-                android:textSize="16sp"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="normal"
                 android:gravity="center"
-                android:layout_marginBottom="14dp" />
+                android:layout_marginBottom="16dp" />
 
-            <!-- Dosage -->
+            <!-- Dosage - Highlighted for importance -->
             <TextView
                 android:id="@+id/txtDosage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Dose: -"
-                android:textColor="#243333"
-                android:textSize="22sp"
+                android:textColor="#000000"
+                android:textSize="26sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="10dp" />
+                android:layout_marginBottom="12dp" />
 
             <!-- Instructions -->
             <TextView
@@ -86,67 +88,71 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Instructions"
-                android:textColor="#7C8B89"
-                android:textSize="18sp"
-                android:lineSpacingExtra="4dp" />
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:lineSpacingExtra="6dp" />
 
             <!-- Divider -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="1.5dp"
                 android:background="#BEE8DA"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="14dp" />
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="18dp" />
 
             <!-- Hint -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="After taking it, tap TAKEN."
-                android:textColor="#243333"
-                android:textSize="16sp"
+                android:textColor="#000000"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:gravity="center" />
         </LinearLayout>
 
-        <!-- Primary Button: TAKEN -->
+        <!-- Primary Button: TAKEN - High Visibility -->
         <Button
             android:id="@+id/btnTaken"
             android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:text="TAKEN "
-            android:textAllCaps="false"
-            android:textSize="20sp"
+            android:layout_height="70dp"
+            android:text="TAKEN"
+            android:textAllCaps="true"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:backgroundTint="#2E7D7A"
-            android:textColor="#F6F7F3"
-            android:layout_marginBottom="12dp" />
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp" />
 
         <!-- Secondary Button: Dismiss -->
         <Button
             android:id="@+id/btnDismiss"
             android:layout_width="match_parent"
-            android:layout_height="58dp"
+            android:layout_height="65dp"
             android:text="Dismiss"
             android:textAllCaps="false"
-            android:textSize="18sp"
+            android:textSize="20sp"
+            android:textStyle="bold"
             android:backgroundTint="#BEE8DA"
-            android:textColor="#243333" />
+            android:textColor="#000000" />
 
         <!-- Bottom spacing -->
         <Space
             android:layout_width="1dp"
-            android:layout_height="14dp" />
+            android:layout_height="20dp" />
 
         <!-- Safety note -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="If you need help, contact your caregiver."
-            android:textColor="#6F7F7D"
-            android:textSize="14sp"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginTop="14dp" />
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp" />
 
     </LinearLayout>
 </ScrollView>

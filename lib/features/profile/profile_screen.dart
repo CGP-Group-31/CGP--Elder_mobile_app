@@ -12,7 +12,7 @@ import 'vitals_view_screen.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 
-// ✅ CHANGE THIS IMPORT PATH IF YOUR WELCOME SCREEN IS IN A DIFFERENT FOLDER
+//  CHANGE THIS IMPORT PATH IF YOUR WELCOME SCREEN IS IN A DIFFERENT FOLDER
 import '../auth/welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -53,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  // ✅ Elder-friendly logout confirm dialog
+  //  Elder-friendly logout confirm dialog
   Future<void> _confirmLogout() async {
     final shouldLogout = await showDialog<bool>(
       context: context,
@@ -145,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await ElderSessionManager.logout();
       if (!mounted) return;
 
-      // ✅ go back to welcome/login flow and remove all previous pages
+      //  go back to welcome/login flow and remove all previous pages
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const WelcomeScreen()),
@@ -352,7 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     const SizedBox(height: 22),
 
-                    // ✅ Bigger tiles + text only
+                    //  Bigger tiles + text only
                     Row(
                       children: [
                         Expanded(
@@ -368,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             title: "Vitals",
                             bg: AppColors.primary,
                             textColor: Colors.white,
-                            onTap: () => _open(context, const VitalsViewScreen()),
+                            onTap: () => _open(context, const VitalsShowPage()),
                           ),
                         ),
                       ],
@@ -376,7 +376,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     const SizedBox(height: 18),
 
-                    // ✅ Logout button (not covered by navbar)
+                    //  Logout button (not covered by navbar)
                     SizedBox(
                       width: double.infinity,
                       height: 54,
@@ -566,7 +566,7 @@ class _ActionTileTextOnly extends StatelessWidget {
           title,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 21, // ✅ bigger
+            fontSize: 21, //  bigger
             fontWeight: FontWeight.w900,
             color: tColor,
             height: 1.1,

@@ -282,6 +282,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       },
 
                         ),
+                        _HomeTile(
+                          title: "Location",
+                          icon: Icons.location_on_rounded,
+                          bg: AppColors.sectionBackground,
+                          fg: AppColors.primaryText,
+                          onTap: () => _open(
+                            context,
+                            const LocationScreen(),
+                          ),
+                        ),
                       ],
                     ),
                   ),
