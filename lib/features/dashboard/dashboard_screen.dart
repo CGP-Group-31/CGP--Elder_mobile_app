@@ -11,7 +11,8 @@ import '../messages/messages_screen.dart';
 
 import '../profile/profile_screen.dart';
 import '../sos/sos_screen.dart';
-
+import '../sos/sos_service.dart';
+import '../sos/ambulance_sos_service.dart';
 
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
@@ -108,7 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Elderly Care",
+                        "TrustCare",
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
@@ -172,7 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Text(
                             "Hi $name!",
                             style: TextStyle(
-                              fontSize: 38,
+                              fontSize: 33,
                               height: 1.1,
                               fontWeight: FontWeight.w900,
                               color: AppColors.primaryText,
@@ -260,12 +261,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                            const MessagingScreen(),
                           ),
                         ),
+                    _HomeTile(
+                      title: "Call Ambulance",
+                      icon: Icons.local_hospital_rounded,
+                      bg: AppColors.alertNonCritical,
+                      fg: AppColors.primaryText,
+                      onTap: () async {
+                        try {
+                          await AmbulanceSOSService.triggerAmbulanceSOS();
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                e.toString().replaceFirst("Exception: ", ""),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+
+                        ),
+                        _HomeTile(
+                          title: "Location",
+                          icon: Icons.location_on_rounded,
+                          bg: AppColors.sectionBackground,
+                          fg: AppColors.primaryText,
+                          onTap: () => _open(
+                            context,
+                            const LocationScreen(),
+                          ),
+                        ),
                       ],
                     ),
                   ),
 
                   const Spacer(),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                 ],
               ),
             ),
@@ -277,11 +309,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: ElderBottomNav(
         activeTab: ElderTab.home,
         onHome: () {},
-        onSos: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const SosScreen()),
-          );
+        onSos: () async {
+          try {
+            await SOSService.triggerSOSAndCall(triggerTypeId: 1);
+          } catch (e) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(e.toString().replaceFirst("Exception: ", ""))),
+            );
+          }
         },
         onProfile: () {
           Navigator.pushReplacement(
@@ -290,6 +326,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         },
       ),
+
     );
   }
 }
@@ -345,7 +382,7 @@ class _HomeTile extends StatelessWidget {
                 color: AppColors.primaryText,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 17),
 
             // Bigger tile label (elder friendly)
             Text(
@@ -353,7 +390,7 @@ class _HomeTile extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: fg,
-                fontSize: 18,
+                fontSize: 20,
                 height: 1.2,
                 fontWeight: FontWeight.w900,
               ),

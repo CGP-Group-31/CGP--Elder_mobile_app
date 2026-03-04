@@ -12,6 +12,9 @@ import 'vitals_view_screen.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 
+//  CHANGE THIS IMPORT PATH IF YOUR WELCOME SCREEN IS IN A DIFFERENT FOLDER
+import '../auth/welcome_screen.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -24,6 +27,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<_ElderProfileDto> _profileFuture;
+
+  static const String _errPlaceholder = "Unable to fetch data";
 
   @override
   void initState() {
@@ -40,6 +45,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _open(BuildContext context, Widget page) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
+  void _refresh() {
+    setState(() {
+      _profileFuture = _fetchProfile();
+    });
+  }
+
+  //  Elder-friendly logout confirm dialog
+  Future<void> _confirmLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.background,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.logout_rounded, color: AppColors.sosButton, size: 28),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  "Log out?",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            "Are you sure you want to log out?\n\nYou will need to log in again to use the app.",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              height: 1.3,
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(
+                        color: AppColors.textShade.withValues(alpha: 0.7),
+                        width: 1.3,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.sosButton,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text(
+                      "Log out",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      await ElderSessionManager.logout();
+      if (!mounted) return;
+
+      //  go back to welcome/login flow and remove all previous pages
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+            (_) => false,
+      );
+    }
   }
 
   Future<_ElderProfileDto> _fetchProfile() async {
@@ -77,12 +189,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _refresh() {
-    setState(() {
-      _profileFuture = _fetchProfile();
-    });
-  }
-
   static String _toStr(dynamic v) => (v ?? "").toString().trim();
   static int? _toInt(dynamic v) => int.tryParse((v ?? "").toString());
   static bool _toBool(dynamic v) {
@@ -92,6 +198,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _safe(String v) => v.trim().isEmpty ? "-" : v;
+  bool _isErrorValue(String v) => v == _errPlaceholder;
+
+  _ElderProfileDto _fallbackDto() {
+    return const _ElderProfileDto(
+      userId: null,
+      elderFullName: _errPlaceholder,
+      email: _errPlaceholder,
+      phone: _errPlaceholder,
+      dob: _errPlaceholder,
+      address: _errPlaceholder,
+      gender: _errPlaceholder,
+      caregiverId: null,
+      caregiverFullName: _errPlaceholder,
+      relationshipType: _errPlaceholder,
+      isPrimary: null,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,125 +239,183 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-        body: FutureBuilder<_ElderProfileDto>(
-          future: _profileFuture,
-          builder: (context, snap) {
-            // Loading
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const _ProfileLoadingView();
-            }
+        body: SafeArea(
+          child: FutureBuilder<_ElderProfileDto>(
+            future: _profileFuture,
+            builder: (context, snap) {
+              final bool isLoading = snap.connectionState == ConnectionState.waiting;
+              final bool isError = snap.hasError;
 
-            // Error
-            if (snap.hasError) {
-              return _ProfileErrorView(
-                message: snap.error.toString(),
-                onRetry: _refresh,
-              );
-            }
+              final p = (!isLoading && !isError && snap.data != null)
+                  ? snap.data!
+                  : _fallbackDto();
 
-            final p = snap.data!;
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-              child: Column(
-                children: [
-                  // Profile icon
-                  Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.10),
-                          blurRadius: 18,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.person_rounded,
-                      size: 60,
-                      color: AppColors.primary.withValues(alpha: 0.85),
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // Details card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.sectionSeparator.withValues(alpha: 0.7),
-                        width: 1.2,
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 130), // ✅ extra bottom space for navbar
+                child: Column(
+                  children: [
+                    // Profile icon
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.10),
+                            blurRadius: 18,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 60,
+                        color: AppColors.primary.withValues(alpha: 0.85),
+                      ),
                     ),
-                    child: Column(
+
+                    const SizedBox(height: 18),
+
+                    // Error hint (UI still visible)
+                    if (isError)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.emergencyBackground.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.sosButton.withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: AppColors.sosButton.withValues(alpha: 0.9),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                "Could not load profile right now. Showing placeholders.",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primaryText,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _refresh,
+                              child: const Text("Retry"),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Details card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.sectionSeparator.withValues(alpha: 0.7),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _InfoRow(label: "Name", value: _safe(p.elderFullName), isPlaceholder: _isErrorValue(p.elderFullName)),
+                          _InfoRow(label: "Mobile Number", value: _safe(p.phone), isPlaceholder: _isErrorValue(p.phone)),
+                          _InfoRow(label: "Date of Birth", value: _safe(p.dob), isPlaceholder: _isErrorValue(p.dob)),
+                          _InfoRow(label: "Gender", value: _safe(p.gender), isPlaceholder: _isErrorValue(p.gender)),
+                          _InfoRow(label: "Address", value: _safe(p.address), isPlaceholder: _isErrorValue(p.address)),
+                          _InfoRow(label: "Email", value: _safe(p.email), isPlaceholder: _isErrorValue(p.email)),
+                          _InfoRow(label: "Caregiver Name", value: _safe(p.caregiverFullName), isPlaceholder: _isErrorValue(p.caregiverFullName)),
+                          _InfoRow(label: "Relationship", value: _safe(p.relationshipType), isPlaceholder: _isErrorValue(p.relationshipType)),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    //  Bigger tiles + text only
+                    Row(
                       children: [
-                        _InfoRow(label: "Name", value: _safe(p.elderFullName)),
-                        _InfoRow(label: "Mobile Number", value: _safe(p.phone)),
-                        _InfoRow(label: "Date of Birth", value: _safe(p.dob)),
-                        _InfoRow(label: "Gender", value: _safe(p.gender)),
-                        _InfoRow(label: "Address", value: _safe(p.address)),
-                        _InfoRow(label: "Email", value: _safe(p.email)),
-                        _InfoRow(
-                          label: "Caregiver Name",
-                          value: _safe(p.caregiverFullName),
+                        Expanded(
+                          child: _ActionTileTextOnly(
+                            title: "Medical\nDetails",
+                            bg: AppColors.alertNonCritical,
+                            onTap: () => _open(context, const MedicalDetailsViewScreen()),
+                          ),
                         ),
-                        _InfoRow(
-                          label: "Relationship",
-                          value: _safe(p.relationshipType),
+                        const SizedBox(width: 18),
+                        Expanded(
+                          child: _ActionTileTextOnly(
+                            title: "Vitals",
+                            bg: AppColors.primary,
+                            textColor: Colors.white,
+                            onTap: () => _open(context, const VitalsShowPage()),
+                          ),
                         ),
                       ],
                     ),
-                  ),
 
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
-                  // Buttons
-                  GridView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 18,
-                      mainAxisSpacing: 18,
-                      childAspectRatio: 1.15,
+                    //  Logout button (not covered by navbar)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton.icon(
+                        onPressed: _confirmLogout,
+                        icon: const Icon(Icons.logout_rounded, size: 22),
+                        label: const Text(
+                          "Logout",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.sosButton,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
                     ),
-                    children: [
-                      _ActionTile(
-                        title: "Medical\nDetails",
-                        icon: Icons.medical_information_rounded,
-                        bg: AppColors.alertNonCritical,
-                        onTap: () => _open(context, const MedicalDetailsViewScreen()),
+
+                    const SizedBox(height: 10),
+
+                    if (isLoading)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 14),
+                        child: LinearProgressIndicator(
+                          minHeight: 3,
+                          color: AppColors.primary,
+                          backgroundColor: AppColors.sectionSeparator.withValues(alpha: 0.6),
+                        ),
                       ),
-                      _ActionTile(
-                        title: "Vitals",
-                        icon: Icons.monitor_heart_rounded,
-                        bg: AppColors.primary,
-                        onTap: () => _open(context, const VitalsViewScreen()),
-                        textColor: Colors.white,
-                        iconColor: AppColors.primaryText,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         ),
         bottomNavigationBar: ElderBottomNav(
           activeTab: ElderTab.profile,
@@ -253,7 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 // --------------------------
-// DTO Model
+// DTO
 // --------------------------
 class _ElderProfileDto {
   final int? userId;
@@ -269,7 +450,7 @@ class _ElderProfileDto {
   final String relationshipType;
   final bool? isPrimary;
 
-  _ElderProfileDto({
+  const _ElderProfileDto({
     required this.userId,
     required this.elderFullName,
     required this.email,
@@ -285,19 +466,34 @@ class _ElderProfileDto {
 }
 
 // --------------------------
-// UI Pieces
+// Info Row
 // --------------------------
 class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
+  final bool isPlaceholder;
 
-  const _InfoRow({required this.label, required this.value});
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.isPlaceholder = false,
+  });
 
   static const double kLabelSize = ProfileScreen.kLabelSize;
   static const double kValueSize = ProfileScreen.kValueSize;
 
   @override
   Widget build(BuildContext context) {
+    final valueStyle = TextStyle(
+      fontSize: kValueSize,
+      fontWeight: FontWeight.w900,
+      color: isPlaceholder
+          ? AppColors.primaryText.withValues(alpha: 0.45)
+          : AppColors.primaryText,
+      height: 1.2,
+      fontStyle: isPlaceholder ? FontStyle.italic : FontStyle.normal,
+    );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -319,12 +515,7 @@ class _InfoRow extends StatelessWidget {
             child: Text(
               value,
               softWrap: true,
-              style: TextStyle(
-                fontSize: kValueSize,
-                fontWeight: FontWeight.w900,
-                color: AppColors.primaryText,
-                height: 1.2,
-              ),
+              style: valueStyle,
             ),
           ),
         ],
@@ -333,22 +524,20 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _ActionTile extends StatelessWidget {
+// --------------------------
+// Action Tile Text-only (Bigger)
+// --------------------------
+class _ActionTileTextOnly extends StatelessWidget {
   final String title;
-  final IconData icon;
   final Color bg;
+  final Color? textColor;
   final VoidCallback onTap;
 
-  final Color? textColor;
-  final Color? iconColor;
-
-  const _ActionTile({
+  const _ActionTileTextOnly({
     required this.title,
-    required this.icon,
     required this.bg,
     required this.onTap,
     this.textColor,
-    this.iconColor,
   });
 
   @override
@@ -356,12 +545,13 @@ class _ActionTile extends StatelessWidget {
     final Color tColor = textColor ?? AppColors.primaryText;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
+        height: 92,
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
@@ -370,130 +560,17 @@ class _ActionTile extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.78),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                icon,
-                size: 34,
-                color: iconColor ?? AppColors.primaryText,
-              ),
-            ),
-            const SizedBox(height: 12),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  color: tColor,
-                  height: 1.12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// --------------------------
-// Loading / Error Views
-// --------------------------
-class _ProfileLoadingView extends StatelessWidget {
-  const _ProfileLoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      child: Column(
-        children: [
-          Container(
-            width: 110,
-            height: 110,
-            decoration: BoxDecoration(
-              color: AppColors.background.withValues(alpha: 0.7),
-              shape: BoxShape.circle,
-            ),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 21, //  bigger
+            fontWeight: FontWeight.w900,
+            color: tColor,
+            height: 1.1,
           ),
-          const SizedBox(height: 18),
-          Container(
-            width: double.infinity,
-            height: 240,
-            decoration: BoxDecoration(
-              color: AppColors.background.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const LinearProgressIndicator(minHeight: 3),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ProfileErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(18),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.emergencyBackground, width: 1.2),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Could not load profile",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: AppColors.primaryText,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.descriptionText,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: onRetry,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text("Retry"),
-            ),
-          ],
         ),
       ),
     );
