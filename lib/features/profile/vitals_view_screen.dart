@@ -1,40 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-
 import '../theme.dart';
 import '../../core/session/elder_session_manager.dart';
-import '../../core/network/dio_client.dart';
+import 'vitals_api.dart';
 
-class VitalsViewScreen extends StatefulWidget {
-  const VitalsViewScreen({super.key});
 
-  static const double kLabelSize = 18;
-  static const double kValueSize = 19;
-  static const double kTitleSize = 22;
+class VitalsShowPage extends StatefulWidget {
+  const VitalsShowPage({super.key});
 
   @override
-  State<VitalsViewScreen> createState() => _VitalsViewScreenState();
+  State<VitalsShowPage> createState() => _VitalsShowPageState();
 }
 
-class _VitalsViewScreenState extends State<VitalsViewScreen> {
-  late Future<dynamic> _vitalsFuture;
+class _VitalsShowPageState extends State<VitalsShowPage> {
+  bool _loading = true;
+  String? _error;
+
+  int? _elderId;
+  List<Map<String, dynamic>> _categories = [];
 
   @override
   void initState() {
     super.initState();
-    _vitalsFuture = _fetchVitals();
+    _load();
   }
 
-  Future<dynamic> _fetchVitals() async {
-    final elderId = await ElderSessionManager.getElderUserId();
-    if (elderId == null) throw Exception("No elder_id found. Please login again.");
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
-      final res = await DioClient.dio.get("/api/v1/caregiver/vitals/$elderId");
-      return res.data;
-    } on DioException catch (e) {
-      throw Exception(e.response?.data ?? "Failed to fetch vitals");
+      final elderId = await ElderSessionManager.getElderUserId();
+      if (elderId == null) {
+        throw Exception("Elder not logged in.");
+      }
+
+      final resp = await VitalsApi.getLatestVitalsByElder(
+        elderId: elderId,
+        limitPerType: 3,
+      );
+
+      final categories = (resp["categories"] as List?) ?? [];
+      setState(() {
+        _elderId = elderId;
+        _categories = categories.map((e) => Map<String, dynamic>.from(e)).toList();
+      });
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst("Exception: ", ""));
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  String _fmtDate(String isoOrDateTime) {
+
+    if (isoOrDateTime.length >= 16) return isoOrDateTime.replaceFirst("T", " ").substring(0, 16);
+    return isoOrDateTime;
   }
 
   @override
@@ -47,258 +69,145 @@ class _VitalsViewScreenState extends State<VitalsViewScreen> {
         title: const Text("Vitals"),
         actions: [
           IconButton(
-            tooltip: "Refresh",
-            onPressed: () => setState(() => _vitalsFuture = _fetchVitals()),
+            onPressed: _load,
             icon: const Icon(Icons.refresh),
-          )
+          ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 30, 18, 18),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: FutureBuilder<dynamic>(
-              future: _vitalsFuture,
-              builder: (context, snap) {
-                if (snap.connectionState == ConnectionState.waiting) {
-                  return _LoadingCard(title: "User Latest Vitals");
-                }
-                if (snap.hasError) {
-                  return _ErrorCard(
-                    title: "User Latest Vitals",
-                    message: snap.error.toString(),
-                    onRetry: () => setState(() => _vitalsFuture = _fetchVitals()),
-                  );
-                }
 
-                return _VitalsCard(data: snap.data);
-              },
-            ),
-          ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(_error!, style: const TextStyle(color: Colors.red)),
         ),
-      ),
-    );
-  }
-}
+      )
+          : _categories.isEmpty
+          ? const Center(child: Text("No vitals found yet."))
+          : ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _categories.length,
+        itemBuilder: (context, i) {
+          final c = _categories[i];
+          final vitalName = (c["vital_name"] ?? "").toString();
+          final unit = (c["unit"] ?? "").toString();
+          final last = (c["last"] as List?) ?? [];
 
-class _VitalsCard extends StatelessWidget {
-  final dynamic data;
-  const _VitalsCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = _renderVitals(data);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.55),
-          width: 1.6,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 18,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "User Latest Vitals",
-            style: TextStyle(
-              fontSize: VitalsViewScreen.kTitleSize,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryText,
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.containerBackground,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.sectionSeparator),
             ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            height: 1.2,
-            width: double.infinity,
-            color: AppColors.sectionSeparator.withValues(alpha: 0.65),
-          ),
-          const SizedBox(height: 16),
-          ...rows,
-        ],
-      ),
-    );
-  }
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        vitalName,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryText,
+                        ),
+                      ),
+                    ),
+                    if (unit.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.sectionBackground,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          unit,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.primaryText,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                if (last.isEmpty)
+                  const Text("No records", style: TextStyle(color: AppColors.primaryText))
+                else
+                  Column(
+                    children: last.map((item) {
+                      final r = Map<String, dynamic>.from(item);
+                      final value = r["value"].toString();
+                      final notes = (r["notes"] ?? "").toString();
+                      final recordedAt = (r["recorded_at"] ?? "").toString();
 
-  List<Widget> _renderVitals(dynamic d) {
-    // If backend returns a list of vitals objects
-    if (d is List) {
-      if (d.isEmpty) return [_big("-", muted: true)];
-
-      return d.map((item) {
-        if (item is Map) {
-          final map = Map<String, dynamic>.from(item);
-          final typeId = (map["VitalTypeID"] ?? "-").toString();
-          final value = (map["Value"] ?? "-").toString();
-          final notes = (map["Notes"] ?? "").toString();
-          return _row("Vital Type #$typeId", "$value${notes.isEmpty ? "" : "  ($notes)"}");
-        }
-        return _row("Vital", item.toString());
-      }).toList();
-    }
-
-    // If backend returns a single object
-    if (d is Map) {
-      final map = Map<String, dynamic>.from(d);
-      final typeId = (map["VitalTypeID"] ?? "-").toString();
-      final value = (map["Value"] ?? "-").toString();
-      final notes = (map["Notes"] ?? "").toString();
-      return [
-        _row("Vital Type #$typeId", "$value${notes.isEmpty ? "" : "  ($notes)"}"),
-      ];
-    }
-
-    // If backend returns anything else
-    final text = (d ?? "").toString().trim();
-    if (text.isEmpty) return [_big("-", muted: true)];
-    return [_big(text)];
-  }
-
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 170,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: VitalsViewScreen.kLabelSize,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textShade,
-              ),
+                      return Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: AppColors.sectionSeparator),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 95,
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  value,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.primaryText,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 40),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _fmtDate(recordedAt),
+                                    style: const TextStyle(
+                                      fontSize: 20, fontWeight: FontWeight.w800,
+                                      color: AppColors.primaryText,
+                                    ),
+                                  ),
+                                  if (notes.trim().isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      notes,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: AppColors.primaryText,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              value.isEmpty ? "-" : value,
-              softWrap: true,
-              style: TextStyle(
-                fontSize: VitalsViewScreen.kValueSize,
-                fontWeight: FontWeight.w900,
-                color: AppColors.primaryText,
-                height: 1.2,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _big(String v, {bool muted = false}) {
-    return Text(
-      v,
-      style: TextStyle(
-        fontSize: VitalsViewScreen.kValueSize,
-        fontWeight: FontWeight.w900,
-        color: muted ? AppColors.descriptionText : AppColors.primaryText,
-        height: 1.25,
-      ),
-    );
-  }
-}
-
-class _LoadingCard extends StatelessWidget {
-  final String title;
-  const _LoadingCard({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.35),
-          width: 1.2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: VitalsViewScreen.kTitleSize,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryText,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const LinearProgressIndicator(minHeight: 3),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorCard extends StatelessWidget {
-  final String title;
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorCard({
-    required this.title,
-    required this.message,
-    required this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.emergencyBackground, width: 1.2),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: VitalsViewScreen.kTitleSize,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryText,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.descriptionText,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: onRetry,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text("Retry"),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
