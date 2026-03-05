@@ -17,8 +17,7 @@ class MedicalDetailsViewScreen extends StatefulWidget {
       _MedicalDetailsViewScreenState();
 }
 
-class _MedicalDetailsViewScreenState
-    extends State<MedicalDetailsViewScreen> {
+class _MedicalDetailsViewScreenState extends State<MedicalDetailsViewScreen> {
   late Future<Map<String, dynamic>> _medicalFuture;
 
   @override
@@ -34,8 +33,8 @@ class _MedicalDetailsViewScreenState
     }
 
     try {
-      final res = await DioClient.dio.get(
-          "/api/v1/caregiver/elder/medical-profile/$elderId");
+      final res = await DioClient.dio
+          .get("/api/v1/caregiver/elder/medical-profile/$elderId");
 
       if (res.data is Map) {
         return Map<String, dynamic>.from(res.data);
@@ -43,13 +42,10 @@ class _MedicalDetailsViewScreenState
 
       return {};
     } on DioException catch (e) {
-      // ✅ If medical record not found → return empty map instead of error
       if (e.response?.statusCode == 404) {
         return {};
       }
-
-      throw Exception(
-          e.response?.data ?? "Failed to fetch medical profile");
+      throw Exception(e.response?.data ?? "Failed to fetch medical profile");
     }
   }
 
@@ -69,8 +65,7 @@ class _MedicalDetailsViewScreenState
         actions: [
           IconButton(
             tooltip: "Refresh",
-            onPressed: () =>
-                setState(() => _medicalFuture = _fetchMedical()),
+            onPressed: () => setState(() => _medicalFuture = _fetchMedical()),
             icon: const Icon(Icons.refresh),
           )
         ],
@@ -86,26 +81,23 @@ class _MedicalDetailsViewScreenState
             if (snap.hasError) {
               return _ErrorCard(
                 message: snap.error.toString(),
-                onRetry: () =>
-                    setState(() => _medicalFuture = _fetchMedical()),
+                onRetry: () => setState(() => _medicalFuture = _fetchMedical()),
               );
             }
 
             final data = snap.data ?? {};
 
             return SingleChildScrollView(
-              padding:
-                  const EdgeInsets.fromLTRB(18, 30, 18, 18),
+              padding: const EdgeInsets.fromLTRB(18, 30, 18, 18),
               child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(maxWidth: 520),
+                constraints: const BoxConstraints(maxWidth: 520),
                 child: _MedicalCard(
                   bloodType: _safe(data["BloodType"]),
                   allergies: _safe(data["Allergies"]),
                   chronic: _safe(data["ChronicConditions"]),
-                  medications: _safe(data["CurrentMedications"]),
-                  surgeries: _safe(data["Surgeries"]),
-                  notes: _safe(data["Notes"]),
+                  emergencyNotes: _safe(data["EmergencyNotes"]),
+                  pastSurgeries: _safe(data["PastSurgeries"]),
+                  preferredDoctor: _safe(data["DoctorName"]),
                 ),
               ),
             );
@@ -120,17 +112,17 @@ class _MedicalCard extends StatelessWidget {
   final String bloodType;
   final String allergies;
   final String chronic;
-  final String medications;
-  final String surgeries;
-  final String notes;
+  final String emergencyNotes;
+  final String pastSurgeries;
+  final String preferredDoctor;
 
   const _MedicalCard({
     required this.bloodType,
     required this.allergies,
     required this.chronic,
-    required this.medications,
-    required this.surgeries,
-    required this.notes,
+    required this.emergencyNotes,
+    required this.pastSurgeries,
+    required this.preferredDoctor,
   });
 
   Widget _row(String label, String value) {
@@ -203,16 +195,15 @@ class _MedicalCard extends StatelessWidget {
           Container(
             height: 1.2,
             width: double.infinity,
-            color: AppColors.sectionSeparator
-                .withValues(alpha: 0.65),
+            color: AppColors.sectionSeparator.withValues(alpha: 0.65),
           ),
           const SizedBox(height: 18),
           _row("Blood Type", bloodType),
           _row("Allergies", allergies),
           _row("Chronic Conditions", chronic),
-          _row("Current Medications", medications),
-          _row("Surgeries", surgeries),
-          _row("Notes", notes),
+          _row("Emergency Notes", emergencyNotes),
+          _row("Past Surgeries", pastSurgeries),
+          _row("Preferred Doctor", preferredDoctor),
         ],
       ),
     );
@@ -248,8 +239,7 @@ class _ErrorCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.circular(22),
-          border:
-              Border.all(color: AppColors.emergencyBackground),
+          border: Border.all(color: AppColors.emergencyBackground),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
