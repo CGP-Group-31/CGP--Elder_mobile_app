@@ -10,7 +10,6 @@ import '../location/location_screen.dart';
 import '../messages/messages_screen.dart';
 
 import '../profile/profile_screen.dart';
-import '../sos/sos_screen.dart';
 import '../sos/sos_service.dart';
 import '../sos/ambulance_sos_service.dart';
 
@@ -37,13 +36,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final elderId = await ElderSessionManager.getElderUserId();
 
     if (elderId == null) {
-      // No id means session missing / not logged in properly
       throw Exception("No elder_id found in session.");
     }
 
     try {
-      final response =
-      await DioClient.dio.get("/api/v1/caregiver/elder/$elderId");
+      final response = await DioClient.dio.get("/api/v1/caregiver/elder/$elderId");
 
       final data = (response.data is Map)
           ? Map<String, dynamic>.from(response.data)
@@ -73,7 +70,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // soft decorative blobs (keeps your wireframe feel)
             Positioned(
               top: -90,
               right: -90,
@@ -98,13 +94,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top title + refresh button (optional but useful)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -127,14 +121,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 18),
-
-                  // ✅ Greeting from API
                   FutureBuilder<String>(
                     future: _nameFuture,
                     builder: (context, snap) {
-                      // Loading: show placeholder so UI doesn't jump
                       if (snap.connectionState == ConnectionState.waiting) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,8 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               width: 220,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.background
-                                    .withValues(alpha: 0.75),
+                                color: AppColors.background.withValues(alpha: 0.75),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
@@ -153,8 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               width: 240,
                               height: 18,
                               decoration: BoxDecoration(
-                                color: AppColors.background
-                                    .withValues(alpha: 0.60),
+                                color: AppColors.background.withValues(alpha: 0.60),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
@@ -162,10 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         );
                       }
 
-                      // Error: fallback gracefully
-                      final name = (snap.hasError)
-                          ? "User"
-                          : (snap.data ?? "User");
+                      final name = (snap.hasError) ? "User" : (snap.data ?? "User");
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,99 +188,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       );
                     },
                   ),
-
-                  // Push the grid to be visually centered
                   const Spacer(),
-
-                  // Grid centered + more spacing + taller tiles
                   Align(
                     alignment: Alignment.center,
-                    child: GridView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 24,
-                        mainAxisSpacing: 24,
-                        childAspectRatio: 1.05,
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        _HomeTile(
-                          title: "Talk to\nCompanion",
-                          icon: Icons.mic_rounded,
-                          bg: AppColors.primary,
-                          fg: Colors.white,
-                          onTap: () => _open(
-                            context,
-                           const TalkToCompanionScreen(),
+                        GridView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 24,
+                            mainAxisSpacing: 24,
+                            childAspectRatio: 1.05,
                           ),
-                        ),
-                        _HomeTile(
-                          title: "Reminders",
-                          icon: Icons.calendar_month_rounded,
-                          bg: AppColors.alertNonCritical,
-                          fg: AppColors.primaryText,
-                          onTap: () => _open(
-                            context,
-                            const RemindersScreen(),
-                          ),
-                        ),
-                        _HomeTile(
-                          title: "Location",
-                          icon: Icons.location_on_rounded,
-                          bg: AppColors.sectionBackground,
-                          fg: AppColors.primaryText,
-                          onTap: () => _open(
-                            context,
-                            const LocationScreen(),
-                          ),
-                        ),
-                        _HomeTile(
-                          title: "Messages",
-                          icon: Icons.mail_rounded,
-                          bg: AppColors.emergencyBackground,
-                          fg: AppColors.primaryText,
-                          onTap: () => _open(
-                            context,
-                           const MessagingScreen(),
-                          ),
-                        ),
-                    _HomeTile(
-                      title: "Call Ambulance",
-                      icon: Icons.local_hospital_rounded,
-                      bg: AppColors.alertNonCritical,
-                      fg: AppColors.primaryText,
-                      onTap: () async {
-                        try {
-                          await AmbulanceSOSService.triggerAmbulanceSOS();
-                        } catch (e) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                e.toString().replaceFirst("Exception: ", ""),
+                          children: [
+                            _HomeTile(
+                              title: "Talk to\nCompanion",
+                              icon: Icons.mic_rounded,
+                              bg: AppColors.primary,
+                              fg: Colors.white,
+                              onTap: () => _open(
+                                context,
+                                const TalkToCompanionScreen(),
                               ),
                             ),
-                          );
-                        }
-                      },
-
+                            _HomeTile(
+                              title: "Reminders",
+                              icon: Icons.calendar_month_rounded,
+                              bg: AppColors.alertNonCritical,
+                              fg: AppColors.primaryText,
+                              onTap: () => _open(
+                                context,
+                                const RemindersScreen(),
+                              ),
+                            ),
+                            _HomeTile(
+                              title: "Location",
+                              icon: Icons.location_on_rounded,
+                              bg: AppColors.sectionBackground,
+                              fg: AppColors.primaryText,
+                              onTap: () => _open(
+                                context,
+                                const LocationScreen(),
+                              ),
+                            ),
+                            _HomeTile(
+                              title: "Messages",
+                              icon: Icons.mail_rounded,
+                              bg: AppColors.emergencyBackground,
+                              fg: AppColors.primaryText,
+                              onTap: () => _open(
+                                context,
+                                const MessagingScreen(),
+                              ),
+                            ),
+                          ],
                         ),
-                        _HomeTile(
-                          title: "Location",
-                          icon: Icons.location_on_rounded,
-                          bg: AppColors.sectionBackground,
+                        const SizedBox(height: 22),
+                        _FullWidthActionButton(
+                          title: "Call Ambulance",
+                          icon: Icons.local_hospital_rounded,
+                          bg: AppColors.alertNonCritical,
                           fg: AppColors.primaryText,
-                          onTap: () => _open(
-                            context,
-                            const LocationScreen(),
-                          ),
+                          onTap: () async {
+                            try {
+                              await AmbulanceSOSService.triggerAmbulanceSOS(context);
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    e.toString().replaceFirst("Exception: ", ""),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
                         ),
                       ],
                     ),
                   ),
-
                   const Spacer(),
                   const SizedBox(height: 5),
                 ],
@@ -304,8 +278,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-
-      // Bottom nav
       bottomNavigationBar: ElderBottomNav(
         activeTab: ElderTab.home,
         onHome: () {},
@@ -315,7 +287,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           } catch (e) {
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(e.toString().replaceFirst("Exception: ", ""))),
+              SnackBar(
+                content: Text(e.toString().replaceFirst("Exception: ", "")),
+              ),
             );
           }
         },
@@ -326,7 +300,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         },
       ),
-
     );
   }
 }
@@ -367,7 +340,6 @@ class _HomeTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Bigger icon container
             Container(
               width: 64,
               height: 64,
@@ -383,8 +355,6 @@ class _HomeTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 17),
-
-            // Bigger tile label (elder friendly)
             Text(
               title,
               textAlign: TextAlign.center,
@@ -392,6 +362,74 @@ class _HomeTile extends StatelessWidget {
                 color: fg,
                 fontSize: 20,
                 height: 1.2,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FullWidthActionButton extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color bg;
+  final Color fg;
+  final VoidCallback onTap;
+
+  const _FullWidthActionButton({
+    required this.title,
+    required this.icon,
+    required this.bg,
+    required this.fg,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 72,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                icon,
+                size: 30,
+                color: AppColors.primaryText,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Text(
+              title,
+              style: TextStyle(
+                color: fg,
+                fontSize: 22,
                 fontWeight: FontWeight.w900,
               ),
             ),
