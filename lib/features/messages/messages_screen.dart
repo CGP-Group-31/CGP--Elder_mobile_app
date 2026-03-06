@@ -6,6 +6,7 @@ import '../../core/session/elder_session_manager.dart';
 import 'message_model.dart';
 import 'messages_service.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class MessagingScreen extends StatefulWidget {
   const MessagingScreen({super.key});
@@ -19,7 +20,11 @@ class _MessagingScreenState extends State<MessagingScreen> {
   final TextEditingController _textCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
   final FlutterTts _tts = FlutterTts();
+  final stt.SpeechToText _stt = stt.SpeechToText();
+  bool _sttReady = false;
+  bool _listening = false;
   bool _ttsReady = false;
+  String _lastWords = "";
 
   Timer? _pollTimer;
 
@@ -37,15 +42,78 @@ class _MessagingScreenState extends State<MessagingScreen> {
     super.initState();
     _initAndLoad();
     _initTts();
+    _initStt();
   }
 
   @override
   void dispose(){
     _pollTimer?.cancel();
     _tts.stop();
+    _stt.stop();
     _textCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _initStt() async{
+    _sttReady = await _stt.initialize(
+      onStatus: (s) {
+        // s can either be: listening, not listening, or done
+        if(!mounted) return;
+        setState(() => _listening = s == "listening");
+        debugPrint("STT status: $s");
+      },
+      onError: (e) {
+        if (!mounted) return;
+        setState(() => _listening = false);
+        debugPrint("STT error: ${e.errorMsg}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Mic error: ${e.errorMsg}")),
+        );
+      },
+      debugLogging: true,
+    );
+
+    debugPrint("STT ready = $_sttReady");
+    debugPrint("Has permission = ${await _stt.hasPermission}");
+  }
+
+  Future<void> _toggleListen() async {
+    if (!_sttReady) {
+      await _initStt();
+      if (!_sttReady){
+        if(!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Speech recognition not available.")),
+        );
+        return;
+      }
+    }
+
+    if(_listening){
+      await _stt.stop();
+      return;
+    }
+
+    _lastWords = "";
+    await _stt.listen(
+      listenMode: stt.ListenMode.dictation,
+      partialResults: true,
+      localeId: "en_US",
+      listenFor: const Duration(seconds: 20),
+      pauseFor: const Duration(seconds: 5),
+      onResult: (result) {
+        final words = result.recognizedWords;
+        if (!mounted) return;
+        setState(() {
+          _lastWords = words;
+          _textCtrl.text = words;
+          _textCtrl.selection = TextSelection.fromPosition(
+            TextPosition(offset: _textCtrl.text.length),
+          );
+        });
+      },
+    );
   }
 
   Future<void> _initTts() async{
@@ -286,6 +354,10 @@ class _MessagingScreenState extends State<MessagingScreen> {
       child: Column(
         children: [
           Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            child: _quickReplies(),
+          ),
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Divider(
               height: 10,
@@ -484,6 +556,24 @@ class _MessagingScreenState extends State<MessagingScreen> {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primaryText,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: _toggleListen,
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: _listening ? Colors.redAccent : AppColors.sectionBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+                  ),
+                  child: Icon(
+                    _listening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                    color: AppColors.primaryText,
+                    size: 26,
                   ),
                 ),
               ),
