@@ -231,7 +231,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fg: AppColors.primaryText,
                               onTap: () => _open(
                                 context,
-                                const LocationScreen(),
+                                const ElderSendLocation(),
                               ),
                             ),
                             _HomeTile(
