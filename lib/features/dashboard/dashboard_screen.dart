@@ -201,7 +201,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisCount: 2,
                             crossAxisSpacing: 24,
                             mainAxisSpacing: 24,
-                            childAspectRatio: 1.05,
+                            childAspectRatio: 1.0,
                           ),
                           children: [
                             _HomeTile(
@@ -336,13 +336,13 @@ class _HomeTile extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 58,
+              height: 58,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.78),
                 borderRadius: BorderRadius.circular(18),
@@ -350,18 +350,18 @@ class _HomeTile extends StatelessWidget {
               alignment: Alignment.center,
               child: Icon(
                 icon,
-                size: 34,
+                size: 30,
                 color: AppColors.primaryText,
               ),
             ),
-            const SizedBox(height: 17),
+            const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: fg,
-                fontSize: 20,
-                height: 1.2,
+                fontSize: 24,
+                height: 1.15,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -394,7 +394,7 @@ class _FullWidthActionButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: 72,
+        height: 78,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(18),
@@ -411,8 +411,8 @@ class _FullWidthActionButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.78),
                 borderRadius: BorderRadius.circular(16),
@@ -420,7 +420,7 @@ class _FullWidthActionButton extends StatelessWidget {
               alignment: Alignment.center,
               child: Icon(
                 icon,
-                size: 30,
+                size: 28,
                 color: AppColors.primaryText,
               ),
             ),
@@ -429,7 +429,7 @@ class _FullWidthActionButton extends StatelessWidget {
               title,
               style: TextStyle(
                 color: fg,
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.w900,
               ),
             ),
