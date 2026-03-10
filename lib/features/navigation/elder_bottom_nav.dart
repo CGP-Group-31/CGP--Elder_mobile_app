@@ -21,8 +21,8 @@ class ElderBottomNav extends StatelessWidget {
       active ? AppColors.primary : AppColors.textShade;
 
   TextStyle _labelStyle(bool active) => TextStyle(
-    fontSize: 14, // ✅ bigger label
-    fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+    fontSize: 18,
+    fontWeight: active ? FontWeight.w900 : FontWeight.w800,
     color: active ? AppColors.primary : AppColors.textShade,
   );
 
@@ -34,12 +34,12 @@ class ElderBottomNav extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+        padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
         decoration: BoxDecoration(
           color: AppColors.background,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 18,
               offset: const Offset(0, -6),
             ),
@@ -57,19 +57,17 @@ class ElderBottomNav extends StatelessWidget {
               labelStyle: _labelStyle(homeActive),
               onTap: onHome,
             ),
-
-            // ✅ SOS: larger center button
             GestureDetector(
               onTap: onSos,
               child: Container(
-                width: 72, // ✅ bigger
-                height: 72, // ✅ bigger
+                width: 78,
+                height: 78,
                 decoration: BoxDecoration(
                   color: AppColors.sosButton,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.sosButton.withValues(alpha:0.35),
+                      color: AppColors.sosButton.withValues(alpha: 0.35),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -80,14 +78,13 @@ class ElderBottomNav extends StatelessWidget {
                   "SOS",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16, // ✅ bigger SOS text
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
                   ),
                 ),
               ),
             ),
-
             _NavItem(
               icon: Icons.person_rounded,
               label: "Profile",
@@ -126,17 +123,21 @@ class _NavItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
       child: SizedBox(
-        width: 92, // ✅ slightly wider to fit bigger text
+        width: 100,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
               color: iconColor,
-              size: 32, // ✅ bigger icon
+              size: 30,
             ),
-            const SizedBox(height: 6),
-            Text(label, style: labelStyle),
+            const SizedBox(height: 7),
+            Text(
+              label,
+              style: labelStyle,
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
