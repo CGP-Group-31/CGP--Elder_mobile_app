@@ -143,7 +143,7 @@ class _MedicalCardState extends State<_MedicalCard> {
   bool _expanded = false;
 
   bool _shouldShowToggle(String text) {
-    return text.length > 55 || text.contains('\n');
+    return text.length > 35 || text.contains('\n');
   }
 
   @override
@@ -182,7 +182,7 @@ class _MedicalCardState extends State<_MedicalCard> {
           Text(
             widget.item.value,
             textAlign: TextAlign.left,
-            maxLines: _expanded ? null : 2,
+            maxLines: _expanded ? null : 1,
             overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 18,
