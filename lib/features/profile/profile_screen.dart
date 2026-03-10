@@ -12,7 +12,6 @@ import 'vitals_view_screen.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 
-//  CHANGE THIS IMPORT PATH IF YOUR WELCOME SCREEN IS IN A DIFFERENT FOLDER
 import '../auth/welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -53,90 +52,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  //  Elder-friendly logout confirm dialog
   Future<void> _confirmLogout() async {
     final shouldLogout = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: AppColors.background,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.logout_rounded, color: AppColors.sosButton, size: 28),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  "Log out?",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.sectionSeparator.withValues(alpha: 0.9),
+                width: 1.6,
               ),
-            ],
-          ),
-          content: const Text(
-            "Are you sure you want to log out?\n\nYou will need to log in again to use the app.",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              height: 1.3,
-            ),
-          ),
-          actionsPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-          actions: [
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(
-                        color: AppColors.textShade.withValues(alpha: 0.7),
-                        width: 1.3,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.sosButton,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text(
-                      "Log out",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 22,
+                  offset: const Offset(0, 12),
                 ),
               ],
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: AppColors.emergencyBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.logout_rounded,
+                    size: 34,
+                    color: AppColors.sosButton,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Log out?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryText,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Are you sure you want to log out?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
+                    color: AppColors.descriptionText,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "You can log in again anytime.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                    color: AppColors.textShade,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 54,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primaryText,
+                            side: BorderSide(
+                              color: AppColors.sectionSeparator,
+                              width: 1.8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text("Cancel"),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 54,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.sosButton,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text("Log out"),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -145,7 +188,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await ElderSessionManager.logout();
       if (!mounted) return;
 
-      //  go back to welcome/login flow and remove all previous pages
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const WelcomeScreen()),
@@ -200,6 +242,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _safe(String v) => v.trim().isEmpty ? "-" : v;
   bool _isErrorValue(String v) => v == _errPlaceholder;
 
+  String _initialsFromName(String name) {
+    final clean = name.trim();
+    if (clean.isEmpty || clean == _errPlaceholder) {
+      return "U";
+    }
+
+    final parts = clean
+        .split(RegExp(r'\s+'))
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return "U";
+    if (parts.length == 1) {
+      return parts.first[0].toUpperCase();
+    }
+
+    return "${parts.first[0]}${parts.last[0]}".toUpperCase();
+  }
+
   _ElderProfileDto _fallbackDto() {
     return const _ElderProfileDto(
       userId: null,
@@ -250,16 +311,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ? snap.data!
                   : _fallbackDto();
 
+              final initials = _initialsFromName(p.elderFullName);
+
               return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 130), // ✅ extra bottom space for navbar
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 130),
                 child: Column(
                   children: [
-                    // Profile icon
                     Container(
                       width: 110,
                       height: 110,
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -270,16 +332,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       alignment: Alignment.center,
-                      child: Icon(
-                        Icons.person_rounded,
-                        size: 60,
-                        color: AppColors.primary.withValues(alpha: 0.85),
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ),
-
                     const SizedBox(height: 18),
-
-                    // Error hint (UI still visible)
                     if (isError)
                       Container(
                         width: double.infinity,
@@ -316,8 +379,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-
-                    // Details card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(18),
@@ -349,10 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 22),
-
-                    //  Bigger tiles + text only
                     Row(
                       children: [
                         Expanded(
@@ -373,13 +431,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 18),
-
-                    //  Logout button (not covered by navbar)
                     SizedBox(
                       width: double.infinity,
-                      height: 54,
+                      height: 56,
                       child: ElevatedButton.icon(
                         onPressed: _confirmLogout,
                         icon: const Icon(Icons.logout_rounded, size: 22),
@@ -396,12 +451,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
+                          elevation: 0,
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     if (isLoading)
                       Padding(
                         padding: const EdgeInsets.only(top: 14),
@@ -433,9 +487,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// --------------------------
-// DTO
-// --------------------------
 class _ElderProfileDto {
   final int? userId;
   final String elderFullName;
@@ -465,9 +516,6 @@ class _ElderProfileDto {
   });
 }
 
-// --------------------------
-// Info Row
-// --------------------------
 class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
@@ -524,9 +572,6 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-// --------------------------
-// Action Tile Text-only (Bigger)
-// --------------------------
 class _ActionTileTextOnly extends StatelessWidget {
   final String title;
   final Color bg;
@@ -566,7 +611,7 @@ class _ActionTileTextOnly extends StatelessWidget {
           title,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 21, //  bigger
+            fontSize: 21,
             fontWeight: FontWeight.w900,
             color: tColor,
             height: 1.1,
