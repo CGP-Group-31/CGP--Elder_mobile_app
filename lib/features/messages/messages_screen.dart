@@ -36,6 +36,10 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
   final List<ChatMessage> _messages = [];
   int _lastMessageId = 0;
+  bool _isNearBottom = true;
+  bool _showScrollToBottom = false;
+  int _newMessageCount = 0;
+
 
   @override
   void initState() {
@@ -43,6 +47,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
     _initAndLoad();
     _initTts();
     _initStt();
+    _scrollCtrl.addListener(_handleScroll);
   }
 
   @override
@@ -50,6 +55,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
     _pollTimer?.cancel();
     _tts.stop();
     _stt.stop();
+    _scrollCtrl.removeListener(_handleScroll);
     _textCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -180,7 +186,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
       });
 
       await _markIncomingAsRead(list);
-      _scrollToBottom();
+      _scrollToBottom(animated: false);
     } catch (e) {
       setState(() {
         _loading = false;
@@ -204,15 +210,28 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
       if (list.isEmpty) return;
 
-      final exisitingIds = _messages.map((m) => m.messageId).toSet();
-      final unique = list.where((m) => !exisitingIds.contains(m.messageId)).toList();
-
-      if(unique.isEmpty) return;
-
       setState(() {
-        _messages.addAll(unique);
-        _lastMessageId = _messages.last.messageId;
+        for(final msg in list) {
+          final exists = _messages.any((m) => m.messageId == msg.messageId);
+          if(!exists) {
+            _messages.add(msg);
+
+            final isIncoming = msg.senderId != _myId;
+            if(!_isNearBottom && isIncoming) {
+              _newMessageCount++;
+              _showScrollToBottom = true;
+            }
+          }
+        }
+
+        if (_messages.isNotEmpty) {
+          _lastMessageId = _messages.last.messageId;
+        }
       });
+
+      if (_isNearBottom){
+        _scrollToBottom();
+      }
 
       await _markIncomingAsRead(list);
       _scrollToBottom();
@@ -260,15 +279,41 @@ class _MessagingScreenState extends State<MessagingScreen> {
     }
   }
 
-  void _scrollToBottom() {
+  void _handleScroll(){
     if (!_scrollCtrl.hasClients) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if(!_scrollCtrl.hasClients) return;
-      _scrollCtrl.animateTo(
-        _scrollCtrl.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+
+    final distanceFromBottom = _scrollCtrl.position.maxScrollExtent - _scrollCtrl.offset;
+
+    final nearBottom = distanceFromBottom < 120;
+
+    if(nearBottom != _isNearBottom) {
+      setState(() {
+        _isNearBottom = nearBottom;
+
+        if(_isNearBottom) {
+          _showScrollToBottom = false;
+          _newMessageCount = 0;
+        }
+      });
+    }
+  }
+
+  void _scrollToBottom({bool animated = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 80));
+      if (!_scrollCtrl.hasClients) return;
+
+      final target = _scrollCtrl.position.maxScrollExtent;
+
+      if (animated) {
+        _scrollCtrl.animateTo(
+          target,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      } else {
+        _scrollCtrl.jumpTo(target);
+      }
     });
   }
 
@@ -304,7 +349,75 @@ class _MessagingScreenState extends State<MessagingScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? _errorView()
-              : _chatUi(),
+              : Stack(
+                  children: [
+                    _chatUi(),
+                    if (_showScrollToBottom)
+                      Positioned(
+                        right: 16,
+                        bottom: MediaQuery.of(context).padding.bottom + 110,
+                        child: GestureDetector(
+                          onTap: () {
+                            _scrollToBottom();
+                            setState(() {
+                              _showScrollToBottom = false;
+                              _newMessageCount = 0;
+                            });
+                          },
+                          child: Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                                if (_newMessageCount > 0)
+                                  Positioned(
+                                    top: 2,
+                                    right: 2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 20,
+                                        maxWidth: 20,
+                                      ),
+                                      child: Text(
+                                        "$_newMessageCount",
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
     );
   }
 

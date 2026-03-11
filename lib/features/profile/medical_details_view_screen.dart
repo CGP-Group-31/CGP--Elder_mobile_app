@@ -8,10 +8,6 @@ import '../../core/network/dio_client.dart';
 class MedicalDetailsViewScreen extends StatefulWidget {
   const MedicalDetailsViewScreen({super.key});
 
-  static const double kLabelSize = 18;
-  static const double kValueSize = 19;
-  static const double kTitleSize = 22;
-
   @override
   State<MedicalDetailsViewScreen> createState() =>
       _MedicalDetailsViewScreenState();
@@ -87,19 +83,33 @@ class _MedicalDetailsViewScreenState extends State<MedicalDetailsViewScreen> {
 
             final data = snap.data ?? {};
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 30, 18, 18),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: _MedicalCard(
-                  bloodType: _safe(data["BloodType"]),
-                  allergies: _safe(data["Allergies"]),
-                  chronic: _safe(data["ChronicConditions"]),
-                  emergencyNotes: _safe(data["EmergencyNotes"]),
-                  pastSurgeries: _safe(data["PastSurgeries"]),
-                  preferredDoctor: _safe(data["DoctorName"]),
-                ),
+            final items = [
+              _MedicalItem(title: "Blood Type", value: _safe(data["BloodType"])),
+              _MedicalItem(title: "Allergies", value: _safe(data["Allergies"])),
+              _MedicalItem(
+                title: "Chronic Conditions",
+                value: _safe(data["ChronicConditions"]),
               ),
+              _MedicalItem(
+                title: "Emergency Notes",
+                value: _safe(data["EmergencyNotes"]),
+              ),
+              _MedicalItem(
+                title: "Past Surgeries",
+                value: _safe(data["PastSurgeries"]),
+              ),
+              _MedicalItem(
+                title: "Preferred Doctor",
+                value: _safe(data["DoctorName"]),
+              ),
+            ];
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                return _MedicalCard(item: items[index]);
+              },
             );
           },
         ),
@@ -108,102 +118,103 @@ class _MedicalDetailsViewScreenState extends State<MedicalDetailsViewScreen> {
   }
 }
 
-class _MedicalCard extends StatelessWidget {
-  final String bloodType;
-  final String allergies;
-  final String chronic;
-  final String emergencyNotes;
-  final String pastSurgeries;
-  final String preferredDoctor;
+class _MedicalItem {
+  final String title;
+  final String value;
+
+  const _MedicalItem({
+    required this.title,
+    required this.value,
+  });
+}
+
+class _MedicalCard extends StatefulWidget {
+  final _MedicalItem item;
 
   const _MedicalCard({
-    required this.bloodType,
-    required this.allergies,
-    required this.chronic,
-    required this.emergencyNotes,
-    required this.pastSurgeries,
-    required this.preferredDoctor,
+    required this.item,
   });
 
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 180,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: MedicalDetailsViewScreen.kLabelSize,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textShade,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              value,
-              softWrap: true,
-              style: TextStyle(
-                fontSize: MedicalDetailsViewScreen.kValueSize,
-                fontWeight: FontWeight.w900,
-                color: value == "-"
-                    ? AppColors.descriptionText
-                    : AppColors.primaryText,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  @override
+  State<_MedicalCard> createState() => _MedicalCardState();
+}
+
+class _MedicalCardState extends State<_MedicalCard> {
+  bool _expanded = false;
+
+  bool _shouldShowToggle(String text) {
+    return text.length > 35 || text.contains('\n');
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isEmptyValue = widget.item.value == "-";
+    final bool showToggle =
+        !isEmptyValue && _shouldShowToggle(widget.item.value);
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.55),
-          width: 1.6,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 18,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        color: AppColors.containerBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.sectionSeparator),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "User Medical History",
-            style: TextStyle(
-              fontSize: MedicalDetailsViewScreen.kTitleSize,
-              fontWeight: FontWeight.w900,
-              color: AppColors.primaryText,
+            widget.item.title,
+            style: const TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
+              height: 1.2,
             ),
           ),
           const SizedBox(height: 10),
           Container(
-            height: 1.2,
             width: double.infinity,
-            color: AppColors.sectionSeparator.withValues(alpha: 0.65),
+            height: 1.2,
+            color: AppColors.sectionSeparator,
           ),
-          const SizedBox(height: 18),
-          _row("Blood Type", bloodType),
-          _row("Allergies", allergies),
-          _row("Chronic Conditions", chronic),
-          _row("Emergency Notes", emergencyNotes),
-          _row("Past Surgeries", pastSurgeries),
-          _row("Preferred Doctor", preferredDoctor),
+          const SizedBox(height: 12),
+          Text(
+            widget.item.value,
+            textAlign: TextAlign.left,
+            maxLines: _expanded ? null : 1,
+            overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 18,
+              height: 1.35,
+              fontWeight: FontWeight.w500,
+              color: isEmptyValue
+                  ? AppColors.descriptionText
+                  : AppColors.primaryText,
+            ),
+          ),
+          if (showToggle) ...[
+            const SizedBox(height: 8),
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                setState(() {
+                  _expanded = !_expanded;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  _expanded ? "Read Less" : "Read More",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -256,7 +267,7 @@ class _ErrorCard extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.descriptionText,
               ),
             ),
