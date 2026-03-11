@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
-import '../auth/welcome_screen.dart';
+import '../auth/login_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../../core/session/elder_session_manager.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-        isLoggedIn ? const DashboardScreen() : const WelcomeScreen(),
+        isLoggedIn ? const DashboardScreen() : const LoginScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
