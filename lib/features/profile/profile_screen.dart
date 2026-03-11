@@ -11,8 +11,8 @@ import 'vitals_view_screen.dart';
 
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
+import '../auth/login_screen.dart';
 
-import '../auth/welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -190,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
             (_) => false,
       );
     }
