@@ -5,6 +5,7 @@ import '../navigation/elder_bottom_nav.dart';
 import '../profile/profile_screen.dart';
 import '../theme.dart';
 import 'reminders_service.dart';
+import 'meals_reminder_screen.dart';
 
 class RemindersScreen extends StatelessWidget {
   const RemindersScreen({super.key});
@@ -67,6 +68,7 @@ class RemindersScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 28),
+
                   Row(
                     children: [
                       Expanded(
@@ -107,6 +109,31 @@ class RemindersScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 18),
+
+                  Align(
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.44,
+                      child: _ReminderOptionCard(
+                        title: "Meals",
+                        icon: Icons.restaurant_menu_rounded,
+                        backgroundColor: const Color(0xFFDDEBFF),
+                        iconBackground: Colors.white.withValues(alpha: 0.78),
+                        textColor: AppColors.primaryText,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const MealsReminderScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
                   const Spacer(),
                 ],
               ),
@@ -777,6 +804,10 @@ class _ReminderOptionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(26),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.08),
+            width: 3.0,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
