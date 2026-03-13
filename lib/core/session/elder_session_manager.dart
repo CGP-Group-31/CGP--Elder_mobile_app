@@ -150,12 +150,12 @@ class ElderSessionManager {
   // Debug dump
   static Future<void> debugPrintAll() async {
     final all = await _storage.readAll(aOptions: _androidOptions);
-    // ignore: avoid_print
+
     all.forEach((k, v) {
-      // ignore: avoid_print
+
       print("$k => $v");
     });
-    // ignore: avoid_print
+
 
   }
 
