@@ -16,6 +16,8 @@ import '../sos/ambulance_sos_service.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 
+import '../questionnaire/wellbeing_check_screen.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -24,6 +26,14 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+
+  bool get _shouldShowQuestionnaireButton {
+    final now = DateTime.now();
+    return now.hour >= 15 && now.hour <= 23;
+  }
+
+  /*bool get _shouldShowQuestionnaireButton => true;*/ //remove the /* and */ symbols if u wanna try the questionnaire instantly
+
   late Future<String> _nameFuture;
 
   @override
@@ -275,6 +285,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
+            if (_shouldShowQuestionnaireButton)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: MediaQuery.of(context).size.height * 0.375,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const WellBeingCheckScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.92),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.assignment_rounded,
+                        color: AppColors.primary,
+                        size: 34,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
