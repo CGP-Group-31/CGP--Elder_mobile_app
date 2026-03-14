@@ -16,6 +16,9 @@ import '../sos/ambulance_sos_service.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 
+import '../questionnaire/wellbeing_check_screen.dart';
+import '../questionnaire/questionnaire_service.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -24,12 +27,76 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+
+  bool get _isWithinQuestionnaireTime {
+    final now = DateTime.now();
+    return now.hour >= 15 && now.hour <= 23;
+  }
+  bool get _shouldShowQuestionnaireButton {
+    return _isWithinQuestionnaireTime && !_hasSubmittedToday && !_checkingFormStatus;
+  }
+
+  /*bool get _shouldShowQuestionnaireButton => true; */ //remove the /* and */ symbols if u wanna try the questionnaire instantly
+
+  bool _hasSubmittedToday = false;
+  bool _checkingFormStatus = true;
+
+  final QuestionnaireService _questionnaireService = QuestionnaireService();
+
   late Future<String> _nameFuture;
 
   @override
   void initState() {
     super.initState();
     _nameFuture = _fetchElderName();
+    _checkTodayQuestionnaireStatus();
+  }
+
+  Future<void> _checkTodayQuestionnaireStatus() async {
+    setState(() {
+      _checkingFormStatus = true;
+    });
+
+    try {
+      final elderId = await ElderSessionManager.getElderUserId();
+
+      if (elderId == null) {
+        setState(() {
+          _hasSubmittedToday = false;
+          _checkingFormStatus = false;
+        });
+        return;
+      }
+
+      final latest = await _questionnaireService.getLatestElderForm(elderId: elderId);
+
+      final infoDateStr = latest["info_date"]?.toString();
+      if(infoDateStr == null || infoDateStr.isEmpty) {
+        setState(() {
+          _hasSubmittedToday = false;
+          _checkingFormStatus = false;
+        });
+        return;
+      }
+
+      final latestDate = DateTime.parse(infoDateStr);
+      final now = DateTime.now();
+
+      final isToday =
+          latestDate.year == now.year &&
+          latestDate.month == now.month &&
+          latestDate.day == now.day;
+
+      setState(() {
+        _hasSubmittedToday = isToday;
+        _checkingFormStatus = false;
+      });
+    } catch (_) {
+      setState(() {
+        _hasSubmittedToday = false;
+        _checkingFormStatus = false;
+      });
+    }
   }
 
   Future<String> _fetchElderName() async {
@@ -275,6 +342,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
+            if (_shouldShowQuestionnaireButton)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: MediaQuery.of(context).size.height * 0.375,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const WellBeingCheckScreen(),
+                        ),
+                      );
+
+                      if(result == true){
+                        await _checkTodayQuestionnaireStatus();
+                      }
+                    },
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.92),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.assignment_rounded,
+                        color: AppColors.primary,
+                        size: 34,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
