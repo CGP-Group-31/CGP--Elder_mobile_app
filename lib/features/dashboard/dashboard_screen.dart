@@ -17,6 +17,7 @@ import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 
 import '../questionnaire/wellbeing_check_screen.dart';
+import '../questionnaire/questionnaire_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,12 +28,20 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
 
-  bool get _shouldShowQuestionnaireButton {
+  bool get _isWithinQuestionnaireTime {
     final now = DateTime.now();
     return now.hour >= 15 && now.hour <= 23;
   }
+  bool get _shouldShowQuestionnaireButton {
+    return _isWithinQuestionnaireTime && !_hasSubmittedToday && !_checkingFormStatus;
+  }
 
-  /*bool get _shouldShowQuestionnaireButton => true;*/ //remove the /* and */ symbols if u wanna try the questionnaire instantly
+  /*bool get _shouldShowQuestionnaireButton => true; */ //remove the /* and */ symbols if u wanna try the questionnaire instantly
+
+  bool _hasSubmittedToday = false;
+  bool _checkingFormStatus = true;
+
+  final QuestionnaireService _questionnaireService = QuestionnaireService();
 
   late Future<String> _nameFuture;
 
@@ -40,6 +49,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _nameFuture = _fetchElderName();
+    _checkTodayQuestionnaireStatus();
+  }
+
+  Future<void> _checkTodayQuestionnaireStatus() async {
+    setState(() {
+      _checkingFormStatus = true;
+    });
+
+    try {
+      final elderId = await ElderSessionManager.getElderUserId();
+
+      if (elderId == null) {
+        setState(() {
+          _hasSubmittedToday = false;
+          _checkingFormStatus = false;
+        });
+        return;
+      }
+
+      final latest = await _questionnaireService.getLatestElderForm(elderId: elderId);
+
+      final infoDateStr = latest["info_date"]?.toString();
+      if(infoDateStr == null || infoDateStr.isEmpty) {
+        setState(() {
+          _hasSubmittedToday = false;
+          _checkingFormStatus = false;
+        });
+        return;
+      }
+
+      final latestDate = DateTime.parse(infoDateStr);
+      final now = DateTime.now();
+
+      final isToday =
+          latestDate.year == now.year &&
+          latestDate.month == now.month &&
+          latestDate.day == now.day;
+
+      setState(() {
+        _hasSubmittedToday = isToday;
+        _checkingFormStatus = false;
+      });
+    } catch (_) {
+      setState(() {
+        _hasSubmittedToday = false;
+        _checkingFormStatus = false;
+      });
+    }
   }
 
   Future<String> _fetchElderName() async {
@@ -293,12 +350,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Center(
                   child: GestureDetector(
                     onTap: () async {
-                      await Navigator.push(
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const WellBeingCheckScreen(),
                         ),
                       );
+
+                      if(result == true){
+                        await _checkTodayQuestionnaireStatus();
+                      }
                     },
                     child: Container(
                       width: 90,
