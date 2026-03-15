@@ -14,7 +14,6 @@ class ElderNotificationService {
   FlutterLocalNotificationsPlugin();
 
   // Channels
-
   static const String medChannelId = "med_reminders";
   static const String medChannelName = "Medication Reminders";
   static const String medChannelDesc = "High priority medication reminders";
@@ -30,6 +29,10 @@ class ElderNotificationService {
   static const String mealChannelId = "meal_reminders";
   static const String mealChannelName = "Meal Reminders";
   static const String mealChannelDesc = "Breakfast/Lunch/Dinner reminders";
+
+  static const String checkingChannelId = "daily_checking_reminders";
+  static const String checkingChannelName = "Daily AI Check-In Reminders";
+  static const String checkingChannelDesc = "Morning and evening AI daily check-in reminders";
 
   static bool _inited = false;
 
@@ -47,7 +50,6 @@ class ElderNotificationService {
       _onNotificationResponseBackground,
     );
 
-    // Medication channel
     const AndroidNotificationChannel medChannel = AndroidNotificationChannel(
       medChannelId,
       medChannelName,
@@ -57,7 +59,6 @@ class ElderNotificationService {
       enableVibration: true,
     );
 
-    // Appointment channel
     const AndroidNotificationChannel apptChannel = AndroidNotificationChannel(
       apptChannelId,
       apptChannelName,
@@ -67,7 +68,6 @@ class ElderNotificationService {
       enableVibration: true,
     );
 
-    // Hydration channel
     const AndroidNotificationChannel hydrationChannel =
     AndroidNotificationChannel(
       hydrationChannelId,
@@ -78,7 +78,6 @@ class ElderNotificationService {
       enableVibration: true,
     );
 
-    // Meal channel
     const AndroidNotificationChannel mealChannel = AndroidNotificationChannel(
       mealChannelId,
       mealChannelName,
@@ -88,19 +87,40 @@ class ElderNotificationService {
       enableVibration: true,
     );
 
-    final androidPlugin = _local.resolvePlatformSpecificImplementation<
+    const AndroidNotificationChannel checkingChannel =
+    AndroidNotificationChannel(
+      checkingChannelId,
+      checkingChannelName,
+      description: checkingChannelDesc,
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    final androidPlugin =
+    _local.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
 
     await androidPlugin?.createNotificationChannel(medChannel);
     await androidPlugin?.createNotificationChannel(apptChannel);
     await androidPlugin?.createNotificationChannel(hydrationChannel);
     await androidPlugin?.createNotificationChannel(mealChannel);
+    await androidPlugin?.createNotificationChannel(checkingChannel);
 
     _inited = true;
   }
 
-  //  Appointment notification
+  static String _readTitle(Map<String, dynamic> d, String fallback) {
+    final value = d["title"]?.toString().trim() ?? "";
+    return value.isNotEmpty ? value : fallback;
+  }
 
+  static String _readBody(Map<String, dynamic> d, String fallback) {
+    final value = d["body"]?.toString().trim() ?? "";
+    return value.isNotEmpty ? value : fallback;
+  }
+
+  // Appointment notification
   static Future<void> showAppointmentNotificationFromMessage(
       RemoteMessage message) async {
     await init();
@@ -109,8 +129,6 @@ class ElderNotificationService {
     if ((d["type"] ?? "") != "APPT_REMINDER") return;
 
     final reminderType = d["reminderType"]?.toString() ?? "";
-    final title =
-    (d["title"]?.toString().trim().isEmpty == true) ? "Doctor Appointment" : d["title"].toString();
     final doctorName = d["doctorName"]?.toString() ?? "-";
     final location = d["location"]?.toString() ?? "-";
     final date = d["appointmentDate"]?.toString() ?? "";
@@ -123,9 +141,15 @@ class ElderNotificationService {
         ? "In 6 hours"
         : "Upcoming";
 
-    final notifTitle = "Appointment Reminder";
+    final notifTitle =
+    (d["title"]?.toString().trim().isNotEmpty == true)
+        ? d["title"].toString()
+        : "Appointment Reminder";
+
     final notifBody =
-        "$whenText • $date $time\nDoctor: $doctorName\nPlace: $location\n$title";
+    (d["body"]?.toString().trim().isNotEmpty == true)
+        ? d["body"].toString()
+        : "$whenText • $date $time\nDoctor: $doctorName\nPlace: $location";
 
     final payload = jsonEncode({
       "type": "APPT_REMINDER",
@@ -169,11 +193,14 @@ class ElderNotificationService {
     final dosage = d["dosage"]?.toString() ?? "";
     final instructions = d["instructions"]?.toString() ?? "";
 
-    final title = "Medicine Reminder";
-    final body = _buildMedBody(
-      medicationName: medicationName,
-      dosage: dosage,
-      instructions: instructions,
+    final title = _readTitle(d, "Medicine Reminder");
+    final body = _readBody(
+      d,
+      _buildMedBody(
+        medicationName: medicationName,
+        dosage: dosage,
+        instructions: instructions,
+      ),
     );
 
     final payload = jsonEncode({
@@ -235,9 +262,7 @@ class ElderNotificationService {
     return "$medicationName\nDose: $doseText\n$insText";
   }
 
-
-  //  Hydration notification (no DB logging)
-
+  // Hydration notification
   static Future<void> showHydrationNotificationFromMessage(
       RemoteMessage message) async {
     await init();
@@ -245,10 +270,11 @@ class ElderNotificationService {
     final d = message.data;
     if ((d["type"] ?? "") != "HYDRATION_REMINDER") return;
 
-    // backend can send custom message OR we fallback to a safe default
-    final msg = (d["message"]?.toString().trim().isNotEmpty == true)
-        ? d["message"].toString()
-        : "Time to drink some water 💧\nTake a few sips now.";
+    final title = _readTitle(d, "Hydration Reminder");
+    final body = _readBody(
+      d,
+      "Time to drink some water \nTake a few sips now.",
+    );
 
     final payload = jsonEncode({
       "type": "HYDRATION_REMINDER",
@@ -268,15 +294,16 @@ class ElderNotificationService {
 
     await _local.show(
       DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      "Hydration Reminder 💧",
-      msg,
+      title,
+      body,
       NotificationDetails(android: androidDetails),
       payload: payload,
     );
   }
 
-  //  Meal notification (opens meal page when tapped)
-  static Future<void> showMealNotificationFromMessage(RemoteMessage message) async {
+  // Meal notification
+  static Future<void> showMealNotificationFromMessage(
+      RemoteMessage message) async {
     await init();
 
     final d = message.data;
@@ -286,23 +313,26 @@ class ElderNotificationService {
     final elderId = d["elderId"]?.toString() ?? "";
     final scheduledFor = d["scheduledFor"]?.toString() ?? "";
 
-    String title;
+    String fallbackTitle;
     switch (mealTime) {
       case "BREAKFAST":
-        title = "Breakfast Reminder ";
+        fallbackTitle = "Breakfast Reminder";
         break;
       case "LUNCH":
-        title = "Lunch Reminder ";
+        fallbackTitle = "Lunch Reminder";
         break;
       case "DINNER":
-        title = "Dinner Reminder ";
+        fallbackTitle = "Dinner Reminder";
         break;
       default:
-        title = "Meal Reminder ";
+        fallbackTitle = "Meal Reminder";
     }
 
-    final body =
+    final fallbackBody =
         "Please open the app and update your meal status.\n(Taken / Missed + Diet)";
+
+    final title = _readTitle(d, fallbackTitle);
+    final body = _readBody(d, fallbackBody);
 
     final payload = jsonEncode({
       "type": "MEAL_REMINDER",
@@ -331,9 +361,61 @@ class ElderNotificationService {
     );
   }
 
+  // Daily AI checking notification
+  static Future<void> showDailyCheckingNotificationFromMessage(
+      RemoteMessage message) async {
+    await init();
+
+    final d = message.data;
+    if ((d["type"] ?? "") != "DAILY_CHECKING_REMINDER") return;
+
+    final session = (d["session"]?.toString() ?? "").toUpperCase();
+
+    String fallbackTitle;
+    String fallbackBody;
+
+    if (session == "MORNING") {
+      fallbackTitle = "Morning AI Check-In";
+      fallbackBody =
+      "Good morning. Your AI daily check-in has started now and will be open until 11:50 AM. Please share how you are feeling";
+    } else {
+      fallbackTitle = "Evening AI Check-In";
+      fallbackBody =
+      "Good afternoon. Your AI daily check-in has started now and will be open until 11:50 PM. Please share your day with your AI companion and complete your daily behavior form.";
+    }
+
+    final title = _readTitle(d, fallbackTitle);
+    final body = _readBody(d, fallbackBody);
+
+    final payload = jsonEncode({
+      "type": "DAILY_CHECKING_REMINDER",
+      "userId": d["userId"]?.toString() ?? "",
+      "session": d["session"]?.toString() ?? "",
+      "localTime": d["localTime"]?.toString() ?? "",
+      "localDate": d["localDate"]?.toString() ?? "",
+    });
+
+    final androidDetails = AndroidNotificationDetails(
+      checkingChannelId,
+      checkingChannelName,
+      channelDescription: checkingChannelDesc,
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      styleInformation: const BigTextStyleInformation(""),
+    );
+
+    await _local.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(100000),
+      title,
+      body,
+      NotificationDetails(android: androidDetails),
+      payload: payload,
+    );
+  }
 
   // Notification tap / actions
-
   static Future<void> _onNotificationResponse(
       NotificationResponse response) async {
     await _handleResponse(response);
@@ -352,7 +434,6 @@ class ElderNotificationService {
     final decoded = jsonDecode(payload);
     final type = decoded["type"]?.toString() ?? "";
 
-    // MED action buttons
     if (type == "MED_REMINDER" && response.actionId == "TAKEN_ACTION") {
       await _markMedTaken(
         decoded["scheduleId"],
@@ -366,13 +447,11 @@ class ElderNotificationService {
       return;
     }
 
-    // For MEAL_REMINDER tap: navigation is handled in UI layer.
-    // We ll store last payload for app to read (optional pattern)
     _lastPayload = decoded;
   }
 
-  //  Optional: app can read this after launch/resume and navigate.
   static Map<String, dynamic>? _lastPayload;
+
   static Map<String, dynamic>? consumeLastPayload() {
     final p = _lastPayload;
     _lastPayload = null;
