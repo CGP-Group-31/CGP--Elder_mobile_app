@@ -294,7 +294,7 @@ class _MealPageState extends State<MealPage> {
                   Text(
                     _mealLabel(mealTime),
                     style: const TextStyle(
-                      fontSize: 28,
+                      fontSize: 24,
                       fontWeight: FontWeight.w900,
                       color: Color(0xFF243333),
                     ),
@@ -472,7 +472,7 @@ class _MealPageState extends State<MealPage> {
             const Text(
               "Select Today’s Meal",
               style: TextStyle(
-                fontSize: 30,
+                fontSize: 26,
                 fontWeight: FontWeight.w900,
                 color: Color(0xFF243333),
               ),
@@ -481,7 +481,7 @@ class _MealPageState extends State<MealPage> {
             const Text(
               "Tap a meal card below to update it.",
               style: TextStyle(
-                fontSize: 17,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF5B6A68),
               ),
@@ -503,7 +503,7 @@ class _MealPageState extends State<MealPage> {
               const Text(
                 "Update Selected Meal",
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFF243333),
                 ),
@@ -519,8 +519,8 @@ class _MealPageState extends State<MealPage> {
                       onSelected: (_) =>
                           setState(() => _selectedStatusId = 2),
                       labelStyle: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
@@ -532,8 +532,8 @@ class _MealPageState extends State<MealPage> {
                       onSelected: (_) =>
                           setState(() => _selectedStatusId = 3),
                       labelStyle: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
@@ -546,7 +546,7 @@ class _MealPageState extends State<MealPage> {
                           setState(() => _selectedStatusId = 4),
                       labelStyle: const TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),

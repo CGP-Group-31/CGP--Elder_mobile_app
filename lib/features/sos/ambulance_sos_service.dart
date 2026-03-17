@@ -140,11 +140,11 @@ class AmbulanceSOSService {
     final relationshipId = await ElderSessionManager.getRelationshipId();
 
     if (elderId == null) {
-      throw Exception("elder_id not found. Please login again.");
+      throw Exception("user not found. Please login again.");
     }
 
     if (relationshipId == null) {
-      throw Exception("relationship_id not found.");
+      throw Exception("relationship not found.");
     }
 
     //  Log to backend first

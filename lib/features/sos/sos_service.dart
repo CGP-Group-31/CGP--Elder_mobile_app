@@ -41,7 +41,7 @@ class SOSService {
       throw Exception("Phone permission denied.");
     }
 
-    // 3) DIRECT CALL (no dialer screen)
+    // 3) DIRECT CALL
     final phone = emergencyPhone.trim();
     final bool? called = await FlutterPhoneDirectCaller.callNumber(phone);
 

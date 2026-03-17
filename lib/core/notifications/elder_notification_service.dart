@@ -373,7 +373,7 @@ class ElderNotificationService {
 
     String fallbackTitle;
     String fallbackBody;
-
+ // backend meesage is working, no need this
     if (session == "MORNING") {
       fallbackTitle = "Morning AI Check-In";
       fallbackBody =

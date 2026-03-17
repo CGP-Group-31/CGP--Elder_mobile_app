@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import '../theme.dart';
 import '../navigation/elder_bottom_nav.dart';
 
-import '../talk/talk_screen.dart';
+import '../talk/talk_to_companion_screen.dart';
 import '../reminders/reminders_screen.dart';
 import '../location/location_screen.dart';
 import '../messages/messages_screen.dart';
