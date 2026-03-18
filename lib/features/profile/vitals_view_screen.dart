@@ -33,7 +33,7 @@ class _VitalsShowPageState extends State<VitalsShowPage> {
     try {
       final elderId = await ElderSessionManager.getElderUserId();
       if (elderId == null) {
-        throw Exception("Elder not logged in.");
+        throw Exception("User is not logged in.");
       }
 
       final resp = await VitalsApi.getLatestVitalsByElder(

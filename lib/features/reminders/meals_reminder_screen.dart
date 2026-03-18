@@ -1,43 +1,22 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../meals/meal_page.dart';
 
 class MealsReminderScreen extends StatelessWidget {
-  const MealsReminderScreen({super.key});
+  final String? initialMealTime;
+  final String? initialScheduledFor;
+
+  const MealsReminderScreen({
+    super.key,
+    this.initialMealTime,
+    this.initialScheduledFor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.mainBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.mainBackground,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.primaryText,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          "Meals",
-          style: TextStyle(
-            color: AppColors.primaryText,
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-      body: Center(
-        child: Text(
-          "Meals reminders page",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primaryText,
-          ),
-        ),
-      ),
+    return MealPage(
+      initialMealTime: initialMealTime,
+      initialScheduledFor: initialScheduledFor,
     );
   }
 }

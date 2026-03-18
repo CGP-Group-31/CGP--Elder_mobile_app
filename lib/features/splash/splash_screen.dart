@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // ✅ SAFE NAVIGATION FIX
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navigate();
     });
