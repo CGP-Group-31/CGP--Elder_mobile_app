@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 import '../theme.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class TalkToCompanionScreen extends StatefulWidget {
   const TalkToCompanionScreen({super.key});
@@ -14,7 +15,9 @@ class TalkToCompanionScreen extends StatefulWidget {
 class _TalkToCompanionScreenState extends State<TalkToCompanionScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FlutterTts _tts = FlutterTts();
 
+  bool _ttsReady = false;
   bool _isLoading = true;
   bool _isSending = false;
 
@@ -37,13 +40,28 @@ class _TalkToCompanionScreenState extends State<TalkToCompanionScreen> {
   void initState() {
     super.initState();
     _initPage();
+    _initTts();
   }
 
   @override
   void dispose() {
+    _tts.stop();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initTts() async {
+    await _tts.setLanguage("en-US");
+    await _tts.setSpeechRate(0.45);
+    await _tts.setPitch(1.0);
+    _ttsReady = true;
+  }
+
+  Future<void> _speak(String text) async {
+    if(!_ttsReady || text.trim().isEmpty) return;
+    await _tts.stop();
+    await _tts.speak(text);
   }
 
   Future<void> _initPage() async {
@@ -577,30 +595,63 @@ class _TalkToCompanionScreenState extends State<TalkToCompanionScreen> {
       itemBuilder: (context, index) {
         final item = _messages[index];
         final isUser = item.role == "elder";
+        final isAssistant = item.role == "assistant";
 
         return Align(
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.82,
-            ),
-            decoration: BoxDecoration(
-              color: isUser ? AppColors.primary : AppColors.containerBackground,
-              borderRadius: BorderRadius.circular(18),
-              border: isUser
-                  ? null
-                  : Border.all(color: AppColors.sectionSeparator),
-            ),
-            child: Text(
-              item.text,
-              style: TextStyle(
-                color: isUser ? Colors.white : AppColors.primaryText,
-                fontSize: isUser ? 18 : 20,
-                fontWeight: FontWeight.bold,
-                height: 1.45,
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.82,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isUser ? AppColors.primary : AppColors.containerBackground,
+                    borderRadius: BorderRadius.circular(18),
+                    border: isUser
+                        ? null
+                        : Border.all(color: AppColors.sectionSeparator),
+                  ),
+                  child: Text(
+                    item.text,
+                    style: TextStyle(
+                      color: isUser ? Colors.white : AppColors.primaryText,
+                      fontSize: isUser ? 18 : 20,
+                      fontWeight: FontWeight.bold,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+
+                if(isAssistant) ...[
+                  const SizedBox(height: 4),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _speak(item.text),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.20),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.volume_up_rounded,
+                        size: 18,
+                        color: AppColors.primary.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         );
