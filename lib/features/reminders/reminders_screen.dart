@@ -641,40 +641,124 @@ class _AppointmentInfoCard extends StatelessWidget {
     final doctor = (appointment["DoctorName"] ?? "-").toString();
     final title = (appointment["Title"] ?? "-").toString();
     final location = (appointment["Location"] ?? "-").toString();
-    final notes = (appointment["Notes"] ?? "").toString();
-    final date = (appointment["AppointmentDate"] ?? "").toString();
-    final time = (appointment["AppointmentTime"] ?? "").toString();
+    final notes = (appointment["Notes"] ?? "").toString().trim();
+    final date = formatDate((appointment["AppointmentDate"] ?? "").toString());
+    final time = formatTime((appointment["AppointmentTime"] ?? "").toString());
 
     return Container(
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.alertNonCritical.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: const Color(0xFF90D076).withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.06),
+        ),
       ),
-      padding: const EdgeInsets.all(18),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _MedicineRow(label: "Doctor", value: doctor),
+
+          Text(
+            title.isEmpty || title == "-" ? "Appointment" : title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+            ),
+          ),
+
           const SizedBox(height: 10),
-          _MedicineRow(label: "Title", value: title),
+
+          Row(
+            children: [
+              Expanded(child: _ModernRow(label: "Date", value: date)),
+              const SizedBox(width: 20),
+              Expanded(child: _ModernRow(label: "Time", value: time)),
+            ],
+          ),
+
           const SizedBox(height: 10),
-          _MedicineRow(label: "Date", value: formatDate(date)),
-          const SizedBox(height: 10),
-          _MedicineRow(label: "Time", value: formatTime(time)),
-          const SizedBox(height: 10),
-          _MedicineRow(label: "Location", value: location),
+          const Divider(height: 1),
+
+          const SizedBox(height: 15),
+
+          _ModernRow(label: "Doctor", value: doctor),
+          const SizedBox(height: 15),
+          _ModernRow(label: "Location", value: location),
+
           if (notes.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            const Divider(height: 1),
+            const SizedBox(height: 18),
+
+
+            Text(
+              "Notes",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade800,
+              ),
+            ),
             const SizedBox(height: 10),
-            _MedicineRow(label: "Notes", value: notes),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                notes,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+            ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _ModernRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _ModernRow({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade800,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        Text(
+          value.isEmpty ? "-" : value,
+          style: const TextStyle(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
+        ),
+      ],
     );
   }
 }
