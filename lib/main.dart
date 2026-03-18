@@ -69,6 +69,13 @@ Future<void> _handleIncomingMessage(RemoteMessage message) async {
     await ElderNotificationService.showMealNotificationFromMessage(message);
     return;
   }
+
+  if (type == "DAILY_CHECKING_REMINDER") {
+    await ElderNotificationService.showDailyCheckingNotificationFromMessage(
+      message,
+    );
+    return;
+  }
 }
 
 void _openMealPageFromMessage(RemoteMessage message) {
