@@ -68,7 +68,6 @@ class RemindersScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 28),
-
                   Row(
                     children: [
                       Expanded(
@@ -109,9 +108,7 @@ class RemindersScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 18),
-
                   Align(
                     alignment: Alignment.center,
                     child: SizedBox(
@@ -133,7 +130,6 @@ class RemindersScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const Spacer(),
                 ],
               ),
@@ -367,81 +363,86 @@ class _AppointmentReminderScreenState extends State<AppointmentReminderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.mainBackground,
+      backgroundColor: const Color(0xFFF6F7F3),
       appBar: AppBar(
-        backgroundColor: AppColors.mainBackground,
+        backgroundColor: const Color(0xFFBEE8DA),
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back_rounded,
-            color: AppColors.primaryText,
+            color: Color(0xFF243333),
+            size: 30,
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           "Appointments",
           style: TextStyle(
-            color: AppColors.primaryText,
-            fontSize: 24,
+            color: Color(0xFF243333),
+            fontSize: 28,
             fontWeight: FontWeight.w900,
           ),
         ),
         actions: [
           IconButton(
             onPressed: _loadAppointments,
-            icon: Icon(
+            icon: const Icon(
               Icons.refresh_rounded,
-              color: AppColors.primaryText,
+              color: Color(0xFF2E7D7A),
+              size: 28,
             ),
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? _ErrorState(
-                  message: _error!,
-                  onRetry: _loadAppointments,
-                )
-              : _appointments.isEmpty
-                  ? RefreshIndicator(
-                      onRefresh: _loadAppointments,
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
-                        children: [
-                          Center(
-                            child: Text(
-                              "No appointments for the next 7 days",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.descriptionText,
+      body: Container(
+        color: const Color(0xFFBEE8DA),
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? _ErrorState(
+                    message: _error!,
+                    onRetry: _loadAppointments,
+                  )
+                : _appointments.isEmpty
+                    ? RefreshIndicator(
+                        onRefresh: _loadAppointments,
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(24, 100, 24, 24),
+                          children: const [
+                            Center(
+                              child: Text(
+                                "No appointments for the next 7 days",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF6F7F7D),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadAppointments,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                          itemCount: _appointments.length,
+                          itemBuilder: (context, index) {
+                            final appointment = _appointments[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _AppointmentInfoCard(
+                                appointment: appointment,
+                                formatDate: _formatDate,
+                                formatTime: _formatTime,
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadAppointments,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(20),
-                        itemCount: _appointments.length,
-                        itemBuilder: (context, index) {
-                          final appointment = _appointments[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _AppointmentInfoCard(
-                              appointment: appointment,
-                              formatDate: _formatDate,
-                              formatTime: _formatTime,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+      ),
     );
   }
 }
@@ -636,90 +637,239 @@ class _AppointmentInfoCard extends StatelessWidget {
     required this.formatTime,
   });
 
+  bool _isToday(String? rawDate) {
+    if (rawDate == null || rawDate.isEmpty) return false;
+
+    try {
+      final dt = DateTime.parse(rawDate);
+      final now = DateTime.now();
+      return dt.year == now.year &&
+          dt.month == now.month &&
+          dt.day == now.day;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final doctor = (appointment["DoctorName"] ?? "-").toString();
     final title = (appointment["Title"] ?? "-").toString();
     final location = (appointment["Location"] ?? "-").toString();
     final notes = (appointment["Notes"] ?? "").toString().trim();
-    final date = formatDate((appointment["AppointmentDate"] ?? "").toString());
+    final rawDate = (appointment["AppointmentDate"] ?? "").toString();
+    final date = formatDate(rawDate);
     final time = formatTime((appointment["AppointmentTime"] ?? "").toString());
+    final isToday = _isToday(rawDate);
+
+    final cardColor =
+        isToday ? const Color(0xFFFFF1CC) : const Color(0xFFD6EFE6);
+    final borderColor =
+        isToday ? const Color(0xFFE6B566) : const Color(0xFF2E7D7A);
+    final titleColor =
+        isToday ? const Color(0xFF2E7D7A) : const Color(0xFF243333);
+    final labelColor =
+        isToday ? const Color(0xFF7C8B89) : const Color(0xFF6F7F7D);
+    final valueColor =
+        isToday ? const Color(0xFF243333) : const Color(0xFF2E7D7A);
+    final noteTitleColor =
+        isToday ? const Color(0xFFE6B566) : const Color(0xFF2E7D7A);
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF90D076).withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.06),
+          color: borderColor,
+          width: 3.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withValues(alpha: 0.10),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          Text(
-            title.isEmpty || title == "-" ? "Appointment" : title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              height: 1.2,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
           Row(
             children: [
-              Expanded(child: _ModernRow(label: "Date", value: date)),
-              const SizedBox(width: 20),
-              Expanded(child: _ModernRow(label: "Time", value: time)),
+              Expanded(
+                child: Text(
+                  title.isEmpty || title == "-" ? "Appointment" : title,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: titleColor,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+              if (isToday)
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC62828),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    "Today",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE6B566).withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.calendar_month_rounded,
+                  size: 22,
+                  color: isToday
+                      ? const Color(0xFFC62828)
+                      : const Color(0xFF243333),
+                ),
+              ),
             ],
           ),
-
-          const SizedBox(height: 10),
-          const Divider(height: 1),
-
-          const SizedBox(height: 15),
-
-          _ModernRow(label: "Doctor", value: doctor),
-          const SizedBox(height: 15),
-          _ModernRow(label: "Location", value: location),
-
-          if (notes.isNotEmpty) ...[
-            const SizedBox(height: 22),
-            const Divider(height: 1),
-            const SizedBox(height: 18),
-
-
-            Text(
-              "Notes",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Colors.grey.shade800,
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _AppointmentField(
+                  label: "Date",
+                  value: date,
+                  labelColor: labelColor,
+                  valueColor: valueColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
+              const SizedBox(width: 20),
+              Expanded(
+                child: _AppointmentField(
+                  label: "Time",
+                  value: time,
+                  labelColor: labelColor,
+                  valueColor: valueColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Divider(
+            height: 1,
+            thickness: 1.2,
+            color: borderColor.withValues(alpha: 0.35),
+          ),
+          const SizedBox(height: 14),
+          _AppointmentField(
+            label: "Doctor",
+            value: doctor,
+            labelColor: labelColor,
+            valueColor: valueColor,
+          ),
+          const SizedBox(height: 14),
+          _AppointmentField(
+            label: "Location",
+            value: location,
+            labelColor: labelColor,
+            valueColor: valueColor,
+          ),
+          if (notes.isNotEmpty) ...[
+            const SizedBox(height: 18),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Text(
-                notes,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w600,
-                  height: 1.4,
+                color: const Color(0xFFF6F7F3),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFE6B566).withValues(alpha: 0.55),
+                  width: 1.4,
                 ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Notes",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: noteTitleColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    notes,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF243333),
+                      height: 1.45,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _AppointmentField extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color labelColor;
+  final Color valueColor;
+
+  const _AppointmentField({
+    required this.label,
+    required this.value,
+    required this.labelColor,
+    required this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: labelColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value.isEmpty ? "-" : value,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: valueColor,
+            height: 1.35,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -738,7 +888,6 @@ class _ModernRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Text(
           label,
           style: TextStyle(
@@ -747,9 +896,7 @@ class _ModernRow extends StatelessWidget {
             color: Colors.grey.shade800,
           ),
         ),
-
         const SizedBox(height: 6),
-
         Text(
           value.isEmpty ? "-" : value,
           style: const TextStyle(
