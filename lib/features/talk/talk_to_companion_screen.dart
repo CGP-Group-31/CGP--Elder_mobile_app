@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/session/elder_session_manager.dart';
 import '../theme.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class TalkToCompanionScreen extends StatefulWidget {
   const TalkToCompanionScreen({super.key});
@@ -14,7 +16,13 @@ class TalkToCompanionScreen extends StatefulWidget {
 class _TalkToCompanionScreenState extends State<TalkToCompanionScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FlutterTts _tts = FlutterTts();
+  final stt.SpeechToText _stt = stt.SpeechToText();
 
+  bool _ttsReady = false;
+  bool _sttReady = false;
+  bool _isListening = false;
+  String _lastWords = "";
   bool _isLoading = true;
   bool _isSending = false;
 
@@ -37,13 +45,90 @@ class _TalkToCompanionScreenState extends State<TalkToCompanionScreen> {
   void initState() {
     super.initState();
     _initPage();
+    _initTts();
+    _initStt();
   }
 
   @override
   void dispose() {
+    _tts.stop();
+    _stt.stop();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initStt() async {
+    _sttReady = await _stt.initialize(
+      onStatus: (status) {
+        if(!mounted) return;
+        setState(() {
+          _isListening = status == "listening";
+        });
+      },
+      onError: (error) {
+        if (!mounted) return;
+        setState(() {
+          _isListening = false;
+        });
+
+        if(error.errorMsg == "error_speech_timeout") return;
+
+        _showSnackBar("Mic error: ${error.errorMsg}");
+      },
+      debugLogging: true,
+    );
+  }
+
+  Future<void> _toggleListen() async {
+    if (!_sttReady) {
+      await _initStt();
+      if (!_sttReady) {
+        _showSnackBar("Speech recognition not available.");
+        return;
+      }
+    }
+
+    if (_isListening) {
+      await _stt.stop();
+      return;
+    }
+
+    _lastWords = "";
+
+    await _stt.listen(
+      listenMode: stt.ListenMode.dictation,
+      partialResults: true,
+      localeId: "en_US",
+      listenFor: const Duration(seconds: 20),
+      pauseFor: const Duration(seconds: 4),
+      onResult: (result) {
+        if (!mounted) return;
+
+        final words = result.recognizedWords;
+
+        setState(() {
+          _lastWords = words;
+          _messageController.text = words;
+          _messageController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _messageController.text.length),
+          );
+        });
+      },
+    );
+  }
+
+  Future<void> _initTts() async {
+    await _tts.setLanguage("en-US");
+    await _tts.setSpeechRate(0.45);
+    await _tts.setPitch(1.0);
+    _ttsReady = true;
+  }
+
+  Future<void> _speak(String text) async {
+    if(!_ttsReady || text.trim().isEmpty) return;
+    await _tts.stop();
+    await _tts.speak(text);
   }
 
   Future<void> _initPage() async {
@@ -577,30 +662,63 @@ class _TalkToCompanionScreenState extends State<TalkToCompanionScreen> {
       itemBuilder: (context, index) {
         final item = _messages[index];
         final isUser = item.role == "elder";
+        final isAssistant = item.role == "assistant";
 
         return Align(
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.82,
-            ),
-            decoration: BoxDecoration(
-              color: isUser ? AppColors.primary : AppColors.containerBackground,
-              borderRadius: BorderRadius.circular(18),
-              border: isUser
-                  ? null
-                  : Border.all(color: AppColors.sectionSeparator),
-            ),
-            child: Text(
-              item.text,
-              style: TextStyle(
-                color: isUser ? Colors.white : AppColors.primaryText,
-                fontSize: isUser ? 18 : 20,
-                fontWeight: FontWeight.bold,
-                height: 1.45,
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.82,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isUser ? AppColors.primary : AppColors.containerBackground,
+                    borderRadius: BorderRadius.circular(18),
+                    border: isUser
+                        ? null
+                        : Border.all(color: AppColors.sectionSeparator),
+                  ),
+                  child: Text(
+                    item.text,
+                    style: TextStyle(
+                      color: isUser ? Colors.white : AppColors.primaryText,
+                      fontSize: isUser ? 18 : 20,
+                      fontWeight: FontWeight.bold,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+
+                if(isAssistant) ...[
+                  const SizedBox(height: 4),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _speak(item.text),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.20),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.volume_up_rounded,
+                        size: 18,
+                        color: AppColors.primary.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         );
@@ -672,6 +790,31 @@ class _TalkToCompanionScreenState extends State<TalkToCompanionScreen> {
                 ),
               ),
             ),
+
+            const SizedBox(width: 8),
+
+            SizedBox(
+              height: 56,
+              width: 56,
+              child: ElevatedButton(
+                onPressed: _isSending ? null : _toggleListen,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                  _isListening ? Colors.redAccent : AppColors.sectionBackground,
+                  foregroundColor: AppColors.primaryText,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: EdgeInsets.zero,
+                  elevation: 0,
+                ),
+                child: Icon(
+                  _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                  size: 24,
+                ),
+              ),
+            ),
+
             const SizedBox(width: 8),
             SizedBox(
               height: 56,
