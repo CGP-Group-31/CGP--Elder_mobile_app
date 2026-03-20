@@ -44,7 +44,7 @@ class AlarmActivity : AppCompatActivity() {
         val txtDosage = findViewById<TextView>(R.id.txtDosage)
         val txtInstructions = findViewById<TextView>(R.id.txtInstructions)
 
-        // Greeting (safe)
+        // Greeting
         try {
             val txtGreeting = findViewById<TextView>(R.id.txtGreeting)
             val nameToShow = if (fullName.isNotBlank()) fullName else "there"
@@ -83,7 +83,7 @@ class AlarmActivity : AppCompatActivity() {
 
         // Buttons
         findViewById<Button>(R.id.btnTaken).setOnClickListener {
-            // Send backend update (WorkManager)
+            // Send backend update
             AlarmTakenApi.enqueueTaken(applicationContext, scheduleId, elderId, scheduledFor)
 
             stopAll()

@@ -20,7 +20,7 @@ class ElderFCMManager {
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
       await ElderSessionManager.saveFCMToken(newToken);
 
-      // If already logged in, you can sync automatically
+      // If already logged in, can sync automatically
       final loggedIn = await ElderSessionManager.isLoggedIn();
       if (loggedIn) {
         await syncTokenToBackend(newToken);
@@ -30,16 +30,16 @@ class ElderFCMManager {
     return token;
   }
 
-  /// OPTIONAL: call this after login or when token refresh happens.
-  /// Backend endpoint is up to you (create one if you want).
+
+
   static Future<void> syncTokenToBackend(String token) async {
     try {
       final Dio dio = DioClient.dio;
       final elderUserId = await ElderSessionManager.getElderUserId();
       if (elderUserId == null) return;
 
-      // Example endpoint (create in backend if needed)
-      // POST /api/v1/elder/elder/fcm
+
+
       await dio.post(
         "/api/v1/elder/elder/fcm",
         data: {
@@ -50,7 +50,7 @@ class ElderFCMManager {
         },
       );
     } catch (_) {
-      // Silent fail (don’t crash app if token sync fails)
+      // Silent fail
     }
   }
 }
