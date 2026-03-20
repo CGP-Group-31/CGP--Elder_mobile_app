@@ -7,7 +7,7 @@ import androidx.work.WorkManager
 
 object AlarmTakenApi {
 
-    private const val BASE_URL = "http://10.0.2.2:8000"
+    private const val BASE_URL = "http://159.65.158.217:8000"
 
     fun enqueueTaken(context: Context, scheduleId: Int, elderId: Int, scheduledFor: String) {
         val data = Data.Builder()

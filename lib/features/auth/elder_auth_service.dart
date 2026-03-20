@@ -51,10 +51,9 @@ class ElderAuthService {
       final tzName = now.timeZoneName; // ex: "IST" (varies)
       final tzOffset = _formatOffset(now.timeZoneOffset); // ex: "+05:30"
 
-      // Save meta locally (optional)
-      await ElderSessionManager.saveAppType(appType);
-      await ElderSessionManager.saveDeviceModel(deviceModel);
-      await ElderSessionManager.saveTimezone("$tzName $tzOffset"); // store readable
+      // await ElderSessionManager.saveAppType(appType);
+      // await ElderSessionManager.saveDeviceModel(deviceModel);
+     // await ElderSessionManager.saveTimezone("$tzName $tzOffset"); // store readable
 
       final response = await _dio.post(
         "/api/v1/elder/elder/login",
