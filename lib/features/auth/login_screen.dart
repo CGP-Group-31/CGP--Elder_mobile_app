@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: const Text(
-            "Please contact your child or caregiver to reset your password.",
+            "Please contact your caregiver to reset your password.",
             style: TextStyle(fontSize: 18),
           ),
           actions: [
