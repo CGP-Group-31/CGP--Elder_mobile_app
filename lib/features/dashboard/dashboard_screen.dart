@@ -1,3 +1,4 @@
+import 'package:cgp_elder/features/questionnaire/wellbeing_intro_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
@@ -18,6 +19,7 @@ import '../../core/session/elder_session_manager.dart';
 
 import '../questionnaire/wellbeing_check_screen.dart';
 import '../questionnaire/questionnaire_service.dart';
+import 'animated_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -163,231 +165,204 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "TrustCare",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primaryText,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      IconButton(
-                        tooltip: "Refresh name",
-                        onPressed: _refreshName,
-                        icon: Icon(
-                          Icons.refresh,
-                          color: AppColors.primaryText.withValues(alpha: 0.65),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  FutureBuilder<String>(
-                    future: _nameFuture,
-                    builder: (context, snap) {
-                      if (snap.connectionState == ConnectionState.waiting) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 220,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.background.withValues(alpha: 0.75),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Container(
-                              width: 240,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: AppColors.background.withValues(alpha: 0.60),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-
-                      final name = (snap.hasError) ? "User" : (snap.data ?? "User");
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Hi $name!",
-                            style: TextStyle(
-                              fontSize: 33,
-                              height: 1.1,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.primaryText,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "How are you today?",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.descriptionText,
-                            ),
-                          ),
-                          if (snap.hasError) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              "Could not load name. Tap refresh.",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.descriptionText,
-                              ),
-                            ),
-                          ],
-                        ],
-                      );
-                    },
-                  ),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        GridView(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 24,
-                            mainAxisSpacing: 24,
-                            childAspectRatio: 1.0,
+                        Text(
+                          "TrustCare",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primaryText,
                           ),
-                          children: [
-                            _HomeTile(
-                              title: "Talk to\nCompanion",
-                              icon: Icons.mic_rounded,
-                              bg: AppColors.primary,
-                              fg: Colors.white,
-                              onTap: () => _open(
-                                context,
-                                const TalkToCompanionScreen(),
-                              ),
-                            ),
-                            _HomeTile(
-                              title: "Reminders",
-                              icon: Icons.calendar_month_rounded,
-                              bg: AppColors.alertNonCritical,
-                              fg: AppColors.primaryText,
-                              onTap: () => _open(
-                                context,
-                                const RemindersScreen(),
-                              ),
-                            ),
-                            _HomeTile(
-                              title: "Location",
-                              icon: Icons.location_on_rounded,
-                              bg: AppColors.sectionBackground,
-                              fg: AppColors.primaryText,
-                              onTap: () => _open(
-                                context,
-                                const ElderSendLocation(),
-                              ),
-                            ),
-                            _HomeTile(
-                              title: "Messages",
-                              icon: Icons.mail_rounded,
-                              bg: AppColors.emergencyBackground,
-                              fg: AppColors.primaryText,
-                              onTap: () => _open(
-                                context,
-                                const MessagingScreen(),
-                              ),
-                            ),
-                          ],
                         ),
-                        const SizedBox(height: 22),
-                        _FullWidthActionButton(
-                          title: "Call Ambulance",
-                          icon: Icons.local_hospital_rounded,
-                          bg: AppColors.alertNonCritical,
-                          fg: AppColors.primaryText,
-                          onTap: () async {
-                            try {
-                              await AmbulanceSOSService.triggerAmbulanceSOS(context);
-                            } catch (e) {
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    e.toString().replaceFirst("Exception: ", ""),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
+                        const SizedBox(width: 10),
+                        IconButton(
+                          tooltip: "Refresh name",
+                          onPressed: _refreshName,
+                          icon: Icon(
+                            Icons.refresh,
+                            color: AppColors.primaryText.withValues(alpha: 0.65),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  const Spacer(),
-                  const SizedBox(height: 5),
-                ],
-              ),
-            ),
-            if (_shouldShowQuestionnaireButton)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: MediaQuery.of(context).size.height * 0.375,
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const WellBeingCheckScreen(),
-                        ),
-                      );
+                    const SizedBox(height: 18),
+                    FutureBuilder<String>(
+                      future: _nameFuture,
+                      builder: (context, snap) {
+                        if (snap.connectionState == ConnectionState.waiting) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 220,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.background.withValues(alpha: 0.75),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                width: 240,
+                                height: 18,
+                                decoration: BoxDecoration(
+                                  color: AppColors.background.withValues(alpha: 0.60),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
 
-                      if(result == true){
-                        await _checkTodayQuestionnaireStatus();
-                      }
-                    },
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.92),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.35),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
+                        final name = (snap.hasError) ? "User" : (snap.data ?? "User");
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Hi $name!",
+                              style: TextStyle(
+                                fontSize: 33,
+                                height: 1.1,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "How are you today?",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.descriptionText,
+                              ),
+                            ),
+
+                            if(_shouldShowQuestionnaireButton) ...[
+                              const SizedBox(height: 20),
+                              AnimatedWellBeingCard(
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const WellBeingIntroScreen(),
+                                    ),
+                                  );
+
+                                  if (result == true) {
+                                    await _checkTodayQuestionnaireStatus();
+                                  }
+                                },
+                              ),
+                            ],
+                            if (snap.hasError) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                "Could not load name. Tap refresh.",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.descriptionText,
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GridView(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 24,
+                              mainAxisSpacing: 24,
+                              childAspectRatio: 1.0,
+                            ),
+                            children: [
+                              _HomeTile(
+                                title: "Talk to\nCompanion",
+                                icon: Icons.mic_rounded,
+                                bg: AppColors.primary,
+                                fg: Colors.white,
+                                onTap: () => _open(
+                                  context,
+                                  const TalkToCompanionScreen(),
+                                ),
+                              ),
+                              _HomeTile(
+                                title: "Reminders",
+                                icon: Icons.calendar_month_rounded,
+                                bg: AppColors.alertNonCritical,
+                                fg: AppColors.primaryText,
+                                onTap: () => _open(
+                                  context,
+                                  const RemindersScreen(),
+                                ),
+                              ),
+                              _HomeTile(
+                                title: "Location",
+                                icon: Icons.location_on_rounded,
+                                bg: AppColors.sectionBackground,
+                                fg: AppColors.primaryText,
+                                onTap: () => _open(
+                                  context,
+                                  const ElderSendLocation(),
+                                ),
+                              ),
+                              _HomeTile(
+                                title: "Messages",
+                                icon: Icons.mail_rounded,
+                                bg: AppColors.emergencyBackground,
+                                fg: AppColors.primaryText,
+                                onTap: () => _open(
+                                  context,
+                                  const MessagingScreen(),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 22),
+                          _FullWidthActionButton(
+                            title: "Call Ambulance",
+                            icon: Icons.local_hospital_rounded,
+                            bg: AppColors.alertNonCritical,
+                            fg: AppColors.primaryText,
+                            onTap: () async {
+                              try {
+                                await AmbulanceSOSService.triggerAmbulanceSOS(context);
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      e.toString().replaceFirst("Exception: ", ""),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.assignment_rounded,
-                        color: AppColors.primary,
-                        size: 34,
-                      ),
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
+            ),
           ],
         ),
       ),
