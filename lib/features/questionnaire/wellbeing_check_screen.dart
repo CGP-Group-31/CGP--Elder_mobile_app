@@ -14,6 +14,7 @@ class _WellBeingCheckScreenState extends State<WellBeingCheckScreen> {
   final QuestionnaireService _service = QuestionnaireService();
 
   bool _loading = false;
+  int _currentStep = 0;
 
   String? _mood;
   String? _sleepQuantity;
@@ -214,6 +215,62 @@ class _WellBeingCheckScreenState extends State<WellBeingCheckScreen> {
     );
   }
 
+  List<Widget> _buildSteps() {
+    return [
+      _buildSingle("1. Which emoji describes your current mood?", moods, _mood, (v) => _mood = v),
+
+      _buildSingle("2. How was your sleep quality?", sleepOptions, _sleepQuantity, (v) => _sleepQuantity = v),
+
+      _buildSingle("3. How is your water intake?", waterOptions, _waterIntake, (v) => _waterIntake = v),
+
+      _buildSingle("4. How is your appetite?", appetiteOptions, _appetiteLevel, (v) => _appetiteLevel = v),
+
+      _buildSingle("5. What is your energy level today?", energyOptions, _energyLevel, (v) => _energyLevel = v),
+
+      _buildSingle("6. How was your overall day?", overallDayOptions, _overallDay, (v) => _overallDay = v),
+
+      _buildSingle("7. How did you move today?", movementOptions, _movementToday, (v) => _movementToday = v),
+
+      _buildSingle("8. How lonely did you feel?", lonelinessOptions, _lonelinessLevel, (v) => _lonelinessLevel = v),
+
+      _buildSingle("9. Did you talk with anyone today?", talkOptions, _talkInteraction, (v) => _talkInteraction = v),
+
+      _buildSingle("10. Did you feel stressed today?", stressOptions, _stressLevel, (v) => _stressLevel = v),
+
+      _buildMulti("11. Are you in pain today? If so, where?", painOptions, _painAreas),
+
+      _buildMulti("12. What activities did  you do today?", activityOptions, _activities),
+    ];
+  }
+
+  Widget _buildSingle(String title, List<String> options, String? selected, Function(String) onSelect) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle(title),
+        _singleChoiceWrap(
+          options: options,
+          selected: selected,
+          onSelected: (v) => setState(() => onSelect(v)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMulti(String title, List<String> options, List<String> list){
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle(title),
+        _multiChoiceWrap(
+          options: options,
+          selectedList: list,
+          onToggle: (v) => _toggleExclusiveList(list, v),
+        ),
+      ],
+    );
+  }
+
   void _toggleExclusiveList(List<String> list, String value) {
     setState(() {
       if (value == "None"){
@@ -241,129 +298,85 @@ class _WellBeingCheckScreenState extends State<WellBeingCheckScreen> {
         title: const Text("Well Being Check"),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionTitle("1. Which emoji describes your current mood?"),
-                _singleChoiceWrap(
-                  options: moods,
-                  selected: _mood,
-                  onSelected: (v) => setState(() => _mood = v),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final steps = _buildSteps();
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight, // Fill the screen height
                 ),
-
-                _sectionTitle("2. How was your sleep quality?"),
-                _singleChoiceWrap(
-                  options: sleepOptions,
-                  selected: _sleepQuantity,
-                  onSelected: (v) => setState(() => _sleepQuantity = v),
-                ),
-
-                _sectionTitle("3. How is your water intake?"),
-                _singleChoiceWrap(
-                  options: waterOptions,
-                  selected: _waterIntake,
-                  onSelected: (v) => setState(() => _waterIntake = v),
-                ),
-
-                _sectionTitle("4. How is your appetite?"),
-                _singleChoiceWrap(
-                  options: appetiteOptions,
-                  selected: _appetiteLevel,
-                  onSelected: (v) => setState(() => _appetiteLevel = v),
-                ),
-
-                _sectionTitle("5. What is your energy level today?"),
-                _singleChoiceWrap(
-                  options: energyOptions,
-                  selected: _energyLevel,
-                  onSelected: (v) => setState(() => _energyLevel = v),
-                ),
-
-                _sectionTitle("6. How was your overall day?"),
-                _singleChoiceWrap(
-                  options: overallDayOptions,
-                  selected: _overallDay,
-                  onSelected: (v) => setState(() => _overallDay = v),
-                ),
-
-                _sectionTitle("7. How did you move today?"),
-                _singleChoiceWrap(
-                  options: movementOptions,
-                  selected: _movementToday,
-                  onSelected: (v) => setState(() => _movementToday = v),
-                ),
-
-                _sectionTitle("8. How lonely did you feel?"),
-                _singleChoiceWrap(
-                  options: lonelinessOptions,
-                  selected: _lonelinessLevel,
-                  onSelected: (v) => setState(() => _lonelinessLevel = v),
-                ),
-
-                _sectionTitle("9. Did you talk with anyone today?"),
-                _singleChoiceWrap(
-                  options: talkOptions,
-                  selected: _talkInteraction,
-                  onSelected: (v) => setState(() => _talkInteraction = v),
-                ),
-
-                _sectionTitle("10. Did you feel stressed today?"),
-                _singleChoiceWrap(
-                  options: stressOptions,
-                  selected: _stressLevel,
-                  onSelected: (v) => setState(() => _stressLevel = v),
-                ),
-
-                _sectionTitle("11. Are you in pain today? If so, where?"),
-                _multiChoiceWrap(
-                  options: painOptions,
-                  selectedList: _painAreas,
-                  onToggle: (v) => _toggleExclusiveList(_painAreas, v),
-                ),
-
-                _sectionTitle("12. What activities did you do today?"),
-                _multiChoiceWrap(
-                  options: activityOptions,
-                  selectedList: _activities,
-                  onToggle: (v) => _toggleExclusiveList(_activities, v),
-                ),
-
-                const SizedBox(height: 24),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.background, // your white box
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                    child: _loading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                      "Done",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // so it doesn't stretch
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Step ${_currentStep + 1} of ${steps.length}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.descriptionText,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Current question
+                        steps[_currentStep],
+
+                        const SizedBox(height: 30),
+
+                        Row(
+                          children: [
+                            if (_currentStep > 0)
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => setState(() => _currentStep--),
+                                  child: const Text("Previous"),
+                                ),
+                              ),
+                            if (_currentStep > 0) const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _loading
+                                    ? null
+                                    : () {
+                                  if (_currentStep == steps.length - 1) {
+                                    _submit();
+                                  } else {
+                                    setState(() => _currentStep++);
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                ),
+                                child: _loading
+                                    ? const CircularProgressIndicator(color: Colors.white)
+                                    : Text(
+                                  _currentStep == steps.length - 1
+                                      ? "Submit"
+                                      : "Next",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
